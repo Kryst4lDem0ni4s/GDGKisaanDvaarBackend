@@ -19,20 +19,28 @@ import firebase_admin
 from fastapi import APIRouter, Depends
 import firebase_admin
 from fastapi import APIRouter, HTTPException
-from dotenv import CREDENTIALS_FILE
+import dotenv 
 import smtplib  # For sending reset emails (Note: You might need to install this library)
 from app.controllers.auth import UserAuth, AuthService
-  
+from pydantic import BaseModel
+
 
 
 # Initialize the Firebase Admin SDK with the downloaded service account key
 router = APIRouter()
 
-cred = credentials.Certificate(CREDENTIALS_FILE)
+cred = credentials.Certificate(dotenv.CREDENTIALS_FILE)
 initialize_app(cred)
 
 auth_service = auth
 db_service = db
+
+class EmailRequest(BaseModel):
+    email: str
+    
+class UpdatePasswordRequest(BaseModel):
+    uid: str
+    new_password: str
 
 @router.post("/register")
 async def register(
@@ -84,7 +92,7 @@ async def register(
         db_instance = db_service()
         await db_instance.remove(f"users:{user.uid}")  # Clean up if error occurs
         raise HTTPException(
-            status_code=status.HTTP_400 status_code,
+            status_code=status.HTTP_400,
             detail=str(e),
         )
         
@@ -131,65 +139,7 @@ async def logout(email: str):
             status_code=status.HTTP_500,
             detail=str(e)
         )
-        
-async def forgot_password(email: str):
-    """Get a reset password link for an email address"""
-    try:
-        user = auth.get_user_by_email(email=email)
-        if user is None:
-            # If not found, send a confirmation to sign in instead
-            await auth.send_confirmation_email(email)
-            return {"message": "Please confirm your account details or login"}
-        
-        return {
-            "message": "Reset link sent to your email",
-            "reset_url": f"https://localhost{user.uid}/password/reset?email={email}"
-        }
-    except Exception as e:
-        db_instance = db_service()
-        await db_instance.remove(f"users:{user.uid}")  # Clean up if error occurs
-        raise HTTPException(
-            status_code=status.HTTP_403,
-            detail=str(e)
-        )
-
-async def update_password(current_user.uid, new_password):
-    """Update the user's password after authentication"""
-    try:
-        await auth.authenticate_user(email=current_user.email, password=new_password)
-        return {"message": "Password updated successfully"}
-    except Exception as e:
-        db_instance = db_service()
-        await db_instance.remove(f"users:{current_user.uid}")  # Clean up if error occurs
-        raise HTTPException(
-            status_code=status.HTTP_500,
-            detail=str(e)
-        )
            
-# @router.post("/sign-up")
-# async def sign_up_user(sign_up_request: modelType.SignUpRequest):
-#     try:
-#         # Create a new user
-#         user = auth.create_user(
-#             email=sign_up_request.email,
-#             password=sign_up_request.password,
-#             firstname=sign_up_request.firstname,
-#             lastname=sign_up_request.lastname,
-#             username=sign_up_request.username,
-#             password=sign_up_request.password,
-#             phonenumber=sign_up_request.phonenumber
-#         )
-#         print('Successfully created new user:', user)
-#         return user
-    
-#     except ValueError as e:
-#         raise HTTPException(status_code=400, detail=str(e))
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-# Example usage
-#new_user = sign_up_user("user@example.com", "strongpassword123")
-
 @router.post("/api/auth/forgot-password")
 async def forget_password(email: EmailRequest):
     try:
@@ -197,24 +147,23 @@ async def forget_password(email: EmailRequest):
         if not user:
             raise HTTPException(status_code=401, detail="Invalid email")
 
-        # Simulate getting reset token (Implement actual Firebase authentication for real app)
-        reset_token = generate_reset_token(user.uid)
-        
-        send_reset_email(reset_token)
+        # Generate a password reset link using Firebase Authentication
+        reset_token = AuthService.generate_reset_token(email.email)
+        AuthService.send_reset_email(reset_token, email.email)
         return {"reset_token": reset_token}
     except Exception as e:
-        db_instance = db_service()
-        await db_instance.remove(f"users:{user.uid}")  # Cleanup if error occurs
-        raise HTTPException(status_code=status.HTTP_401, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.put("/api/auth/update-password")
-async def update_password_endpoint(user_id: str):
+async def update_password(request: UpdatePasswordRequest):
     try:
-        data = {"uid": user_id}
-        response = await AuthService.update_password(**data)
-        return {"message": "Password updated"}
+        user = await UserAuth.get_user(request.uid)
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid user ID")
+        await AuthService.update_password(request.uid, request.new_password)
+        return {"message": "Password updated successfully"}
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/build-profile")
 async def build_new_profile(build_profile_request: modelType.ProfileData):

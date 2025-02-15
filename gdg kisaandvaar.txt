@@ -1,0 +1,573 @@
+Problem Statement:
+Harvesting the Future: AI Solutions for Smallholder Farmers
+Smallholder farmers, who produce a significant portion of the world’s food, often lack access to advanced tools and technologies to optimize their farming practices. This results in lower crop yields, inefficient resource use, and vulnerability to climate change, threatening global food security.
+
+Objective:
+Developing AI-based solutions that empower smallholder farmers with real-time insights and recommendations. Solutions should leverage AI for crop monitoring, pest detection, and resource optimization, ensuring scalability and affordability for farmers in developing regions.
+
+DEADLINE 20TH FEB
+
+FEATURE implementations:
+
+AI-driven crop monitoring - GCP Vision AI
+AI-based pest detection - GCP Vision AI
+Real-time sensor data integration - GCP Vision and ML 
+Geospatial visualization with Google Maps API - GCP Vision and ML
+Weather insights integration - Weather and Maps API?
+Resource optimization analytics - Google GCP Analytics
+Multilingual support - Google Translate
+Scalable and secure backend infrastructure - GCP
+Remote sensing integration 
+real-time market prices for various crops
+Demand forecasting and insights into expected demand for different crops in various regions
+Market trends like emerging markets and trends in agricultural products.
+Primary Farming Features:
+Cold storage facilities
+Transportation services
+Aggregation to reduce transportation costs per unit.
+Primary App Features:
+Farmer registration
+Product listing
+Real-time chat or messaging between farmers and buyers
+Geolocation-based search to help buyers find farmers
+Payment gateway integration
+Allow farmers and buyers to track the status of orders.
+Reviews and ratings for users on transactions and products.
+Multilingual support in multiple Indian languages
+Enable traceability of products from farm to fork (For buyers, not farmers/sellers)
+Use GPS tracking to optimize transportation routes and reduce fuel consumption.
+Forums and discussions: Create online forums and discussion groups where farmers can share experiences, ask questions, and collaborate with peers.
+Cooperative formation: Facilitate the formation of farmer cooperatives to leverage collective bargaining power and access resources.
+Accessibility Features Required:
+Offline capabilities: PWAs can offer offline functionality, caching static assets and allowing the app to work without an internet connection.
+Faster loading: PWAs can load faster than native apps, especially on slower networks.
+Efficiency: minimize CPU usage and battery consumption. 
+Simple navigation: Use clear and intuitive navigation menus and buttons.
+Minimalistic design: Avoid clutter and excessive visual elements that can slow down the app.
+Offline synchronization: Implement mechanisms to synchronize data with the cloud when an internet connection becomes available, ensuring data consistency.
+
+Pragati:
+https://www.canva.com/design/DAGfCv2mC7g/j0VJOa_d4OQxK6we8M3iTA/edit?utm_content=DAGfCv2mC7g&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+
+Design ideas : 
+https://github.com/cindehaa/sparkhub-hackathon
+https://github.com/thisiskhan/E-commerce-App-Flutter
+https://github.com/aravindmedamoni/AgroPool
+https://github.com/robertodevs/flutter_ecommerce_template
+https://github.com/isaakmwenje/Farmdrive
+https://github.com/uzibytes/Voco_App
+
+Create introductory video (for submission), of 3 mins and ppt for the project with research about all the features 
+Modify canva UIUX 
+Change project theme and colors to Google theme 
+Create UI pages for ALL project features with all navigational requirements (eg: Home -> Cold Storage List -> One cold storage details -> chat -> transactions/history etc)
+Primary job : ensure all the listed features are implemented in the UI design.
+
+Note: The previous design had different primary features,
+Now the primary features have changed. The old features must be kept but are secondary now.
+
+The new primary features =
+
+AI-driven crop monitoring - GCP Vision AI
+AI-based pest detection - GCP Vision AI
+Real-time sensor data integration - GCP Vision and ML 
+Geospatial visualization with Google Maps API - GCP Vision and ML
+Weather insights integration - Weather and Maps API?
+Resource optimization analytics - Google GCP Analytics
+Multilingual support - Google Translate
+Scalable and secure backend infrastructure - GCP
+Remote sensing integration
+
+
+
+Here is an incomplete list for your reference, expand the list as you go and keep track:
+
+- Quick App Tutorial for New Registrations / Onboarding - multi-lingual
+- Your Inventory / Inventory Manager Screen
+	- Items in Partnered Storage Warehouses Tab
+	- Self - Stored Inventory Tab
+- Order Management Screen
+	- Current Listings
+	- Past Listings
+	- Customer/Middleman Orders List
+		- Detailed Customer/Middleman Order View
+		- Order Delivery Status
+		- Chat with Customer / Middlemen / Service Providers
+- Homepage FOR CONSUMERS / BUYERS / MIDDLEMEN
+	- List view of all items under search results
+		- Detailed view per item (ye)
+			- Seller / Farmer Profile
+			- Chat with Farmer
+			- related items and sellers panel / screen 
+- Homepage FOR FARMERS
+	- Aggregation and Transport Options
+		- Create groups for aggregation and managing costs / splitting bills
+		- List of Transport Providers
+			- Detailed view (ye)
+		- Manage shipments / transport orders
+			- Maps with Relevant Information (ye)
+	- Retail Shop Options
+		- List of Retail Shops willing to partner with farmers
+			- Detailed view (ye)
+		- Your partners
+			- Chat with partners
+			- View previous deals / transactions / sales
+	- Cold Storage Provider Screen
+		- List of Cold Storage Providers
+			- Detailed view (ye)
+		- Current Partners
+			- Chat with partners
+			- View previous deals / transactions / sales
+	- Community Forum Section
+		- Category Options section
+		- Recent Threads section
+		- Search for Thread by Topic / Filters
+			- List view of threads
+				- Detailed view of each thread
+- Cart (for Consumers / buyers / middlemen) (done but not the next pages)
+	- Payment Options (Directly to the farmer)
+		- Post Payment Status screen
+	- Address Settings
+	- Previous Orders
+		- Review / Rating option
+		- Check Delivery Status
+- Settings
+	- Privacy Section
+	- Security Section
+	
+Manvendra:
+Pull this repo: https://github.com/ggritvik/AngryNerds
+Create new repo from frontend with team name for frontend only
+Copy the AngryNerds repo into this new repo for submission purposes
+Start editing the code in the repo
+
+• What is a PWA?
+– A PWA is essentially a web app enhanced with modern web technologies (like service workers and a web manifest) to work offline, load quickly, and provide a seamless experience.
+– It can be “installed” on a device and even work when there is little or no network connectivity.
+
+• Key Frontend Tasks:
+– Manifest File (manifest.json):
+• Define your app’s name, icons, theme colors, start URL, and display options.
+– Service Worker:
+• Write a service worker script that caches static assets (HTML, CSS, JavaScript, images) so the app loads quickly, even offline.
+• Implement caching strategies (like cache-first or network-first) for both static and dynamic content.
+• Handle fetch events to serve cached resources when offline.
+– Offline Fallback UI:
+• Design fallback pages or error messages to inform users when they are offline.
+– Performance Optimization:
+• Optimize code and assets to reduce CPU and battery usage, ensuring smooth offline operation.
+– Testing & Debugging:
+• Use browser developer tools to simulate offline mode and ensure that caching and service worker behaviors work as intended.
+
+
+
+	- Use canva uiux to create flutter app pages using chatgpt 
+- Ensure responsiveness and scrolling on (some) pages
+- Enable text field and attach them to python-backend APIs
+- Display market trend data fetched from API
+- Enable voice inputs from audio button on flutter side
+- Make a single view app tutorial for new registrations
+- Enable translations - https://www.youtube.com/watch?v=zugxpAcbe4U
+- display all item details in the inventory with crud operations.
+- Enable in-page searches. - https://www.dhiwise.com/post/flutter-search-bar-tutorial-for-building-a-powerful-search-functionality
+- Create all required settings built with accessibility in mind.
+- Ensure disclaimer of limitation that one customer-side purchase can only be made for products from a SINGLE farm/farmer at a time for tracking and update purposes.
+
+	- Create frontend app for  the following tasks and features:
+AI-driven crop monitoring - GCP Vision AI
+AI-based pest detection - GCP Vision AI
+Real-time sensor data integration - GCP Vision and ML 
+Geospatial visualization with Google Maps API - GCP Vision and ML
+Weather insights integration - Weather and Maps API?
+Resource optimization analytics - Google GCP Analytics
+Multilingual support - Google Translate and Twilio Voice bot
+Remote sensing integration
+Offline capabilities: PWAs can offer offline functionality, caching static assets and allowing the app to work without an internet connection.
+Faster loading: PWAs can load faster than native apps, especially on slower networks.
+Efficiency: minimize CPU usage and battery consumption. 
+Simple navigation: Use clear and intuitive navigation menus and buttons.
+Minimalistic design: Avoid clutter and excessive visual elements that can slow down the app.
+Offline synchronization: Implement mechanisms to synchronize data with the cloud when an internet connection becomes available, ensuring data consistency.
+
+	Basically, you must,
+	- Create UI that can use AI features and access cameras
+	- Integrate Google Maps and services for transport services and geolocational AI services and oder tracking and aggregation services and to let buyers find farmers etc
+	- Make the app a PWA that can run very basic features without internet access, so allow cacheing
+	- Integrate Razorpay for all checkout requirements and  aintain oder tracking and history
+	- Use googls translate integrations as a button
+	- Enable app wide searching capabilities
+	
+Karthikey
+Focus on preparing datasets, constructing pipelines and using models for all requirements, deploying them through GCP and using Google tools like VertexAI, tensorflow, etc, and describing endpoint requirements from frontend and backend to make the models work properly.
+
+**AI Use Cases & Implementation Guide**  
+
+### **AI-Driven Crop Monitoring**  
+- **Type**: Vision/Image  
+- **Dataset**: Labeled crop health images (healthy/diseased).  
+- **Model**: AutoML Vision (Vertex AI).  
+- **GCP**: Vision API + Vertex AI for training/deployment.  
+
+### **AI-Based Pest Detection**  
+- **Type**: Vision/Image  
+- **Dataset**: Pest image dataset (e.g., locusts, aphids).  
+- **Model**: Pre-trained Vision API + Custom TensorFlow model (Vertex AI).  
+
+### **Real-Time Sensor Data Integration**  
+- **Type**: Time-Series Analysis  
+- **Dataset**: IoT sensor data (soil moisture, temperature).  
+- **Model**: AutoML Tables (Vertex AI) for anomaly detection.  
+
+### **Geospatial Visualization**  
+- **Type**: Geospatial ML  
+- **Dataset**: Satellite imagery (Google Earth Engine).  
+- **Model**: TensorFlow + Google Maps API for overlay.  
+
+### **Weather Insights**  
+- **Type**: Predictive Analytics  
+- **Dataset**: Historical weather data (NOAA/GCP Weather API).  
+- **Model**: Vertex AI Forecasting.  
+
+### **Resource Optimization Analytics**  
+- **Type**: Recommendation Systems  
+- **Dataset**: Farm input/output logs.  
+- **Model**: Recommendations AI (GCP).  
+
+### **Multilingual Support**  
+- **Type**: NLP  
+- **Tool**: Google Translate API (integrated via Flutter).  
+
+### **Market Price & Demand Forecasting**  
+- **Type**: Time-Series Forecasting  
+- **Dataset**: Historical crop prices (e.g., AGMARKNET).  
+- **Model**: Vertex AI Forecasting.  
+
+### **Market Trends Analysis**  
+- **Type**: NLP  
+- **Dataset**: Agricultural news/articles.  
+- **Model**: Natural Language API (sentiment/entity analysis).  
+
+### **Transportation Route Optimization**  
+- **Type**: Optimization ML  
+- **Dataset**: GPS + traffic logs.  
+- **Tool**: Google Maps Routes API + Vertex AI (custom routing model).  
+
+### **Forums & Discussions (NLP)**  
+- **Type**: NLP  
+- **Tool**: Natural Language API (topic clustering/sentiment).  
+
+### **Traceability (Farm-to-Fork)**  
+- **Type**: Vision/Image  
+- **Dataset**: QR/barcode images + product stages.  
+- **Model**: AutoML Vision (Vertex AI).  
+
+### **Key GCP Tools**:  
+- **Vertex AI**: Model training/deployment.  
+- **Cloud Firestore**: Real-time data sync (offline support).  
+- **Cloud Functions**: Backend logic.  
+- **Google Maps/Earth Engine**: Geospatial data.  
+
+**Flutter Integration**: Use `google_ml_kit` (Vision/NLP), `firebase_core` (backend), `google_maps_flutter`.
+
+Basically,
+Study all features in the app
+Identify all the required AI and ML implementations
+Define dataset and endpoint requirements formally and share with the team for coordinated developments
+Setup the project on GCP for model training, testing and deployments.
+Collect relevant datasets
+
+Khwaish:
+GitHub Backend: https://github.com/Kryst4lDem0ni4s/GDGKisaanDvaarBackend 
+
+Implement all API endpoints for communication between python backend and Flutter frontend
+Define all project requirements, guiding everyone ASAP.
+Implement UNIT TESTS for all modules.
+Create very thorough documentation for all stages.
+Handle the app deployment on GCP
+Handle DBMS requirements through python code (backend), on firebase + GCP bucket if necessary.
+Enabling caching in the app for PWA purposes.
+Integrate all ML model pipelines through code.
+
+General tasks:
+- Format market trend data
+- Switch from phone based AI to Audio AI
+- Enable both text based and audio based replies
+- Send item details to db
+- fetch all item details to be displayed on frontend inventory and individual item details
+- configure crud operations when purchases, returns, cancellations, transactions etc are made for inventory.
+- Configure the forum using firebase - https://community.appinventor.mit.edu/t/can-i-actually-make-a-forum-app-using-firebase-in-app-inventor/37082/2
+- Enable account / profile crud operations from settings
+- Set up notification logic post transaction operations, updates, messages, etc.
+- Create messaging section and chatbot messages with db and caching.
+- Ensure logical limitation that one customer-side purchase can only be made for products from a SINGLE farm/farmer at a time for tracking and update purposes.
+- Connect with payment services including UPI and more convenient options.
+- Forgot password / authentication
+- store account details fetched during registration and profile creation as rdbms
+- Store inventory item details and enable crud operations through sales / inventory edits.
+- Configure messaging capabilities
+- Configure creation of groups for aggregation purposes for dedicated services with bills
+- Configure cart in cache? and transaction history.
+- Configure caching for Offline-first capabilities in messaging, listings, inventory crud, immediate chatbot features, login capabilities, partner operations, additional non-transactional actions. 
+
+API handling requirements:
+
+User & Authentication
+• POST /api/auth/register (with email/phone verification)
+• POST /api/auth/login
+• POST /api/auth/logout
+• POST /api/auth/forgot-password
+• PUT /api/auth/update-password
+• GET /api/auth/verify-email
+• POST /api/auth/device (to register device tokens for push notifications)
+• GET /api/users/{userId}
+• PUT /api/users/{userId}
+• DELETE /api/users/{userId}
+• GET /api/users/{userId}/settings
+• PUT /api/users/{userId}/settings
+• PUT /api/users/{userId}/language (update language preference)
+Inventory & Product Management
+• GET /api/inventory/items
+• POST /api/inventory/items
+• GET /api/inventory/items/{itemId}
+• PUT /api/inventory/items/{itemId}
+• DELETE /api/inventory/items/{itemId}
+• GET /api/inventory/categories
+• GET /api/inventory/search (filter by category, keyword, location, etc.)
+• GET /api/inventory/history
+• POST /api/inventory/items/{itemId}/upload-image (if image update is needed)
+• GET /api/inventory/analytics (for backend metrics on inventory movements)
+Orders & Transactions
+• GET /api/orders
+• POST /api/orders
+• GET /api/orders/{orderId}
+• PUT /api/orders/{orderId}/status (update order status)
+• DELETE /api/orders/{orderId}
+• GET /api/orders/{orderId}/tracking
+• GET /api/orders/{orderId}/chat
+• POST /api/orders/{orderId}/cancel (with cancellation reasons)
+• POST /api/orders/{orderId}/feedback (collect order feedback)
+Payment Processing
+• POST /api/payments/initiate
+• GET /api/payments/status
+• POST /api/payments/confirmation
+• POST /api/payments/refund
+• GET /api/payments/history
+• GET /api/payments/methods
+• POST /api/payments/razorpay (for Razorpay-specific integration)
+• POST /api/integrations/tokens (manage integration tokens for external payment APIs)
+Messaging & Chat
+• GET /api/chat/conversations
+• POST /api/chat/conversations
+• GET /api/chat/conversations/{conversationId}
+• PUT /api/chat/conversations/{conversationId} (update conversation metadata, archive, etc.)
+• DELETE /api/chat/conversations/{conversationId}
+• GET /api/chat/conversations/{conversationId}/messages
+• POST /api/chat/conversations/{conversationId}/messages
+• PUT /api/chat/conversations/{conversationId}/messages/read (mark as read)
+• POST /api/chat/bot (for chatbot queries; include audio processing if needed)
+• POST /api/chat/audio/upload (for handling audio files, if separate from text)
+• GET /api/chat/conversations/{conversationId}/metadata
+Forum & Community
+• GET /api/forum/categories
+• GET /api/forum/threads
+• POST /api/forum/threads
+• GET /api/forum/threads/{threadId}
+• PUT /api/forum/threads/{threadId}
+• DELETE /api/forum/threads/{threadId}
+• GET /api/forum/threads/{threadId}/comments
+• POST /api/forum/threads/{threadId}/comments
+• GET /api/forum/search
+• POST /api/forum/threads/{threadId}/vote (up/down vote a thread)
+• POST /api/forum/threads/{threadId}/report (for reporting inappropriate content)
+• PUT /api/forum/threads/{threadId}/moderate (admin/moderator actions)
+Cooperative & Group Formation
+• GET /api/groups
+• POST /api/groups
+• GET /api/groups/{groupId}
+• PUT /api/groups/{groupId}
+• DELETE /api/groups/{groupId}
+• GET /api/groups/{groupId}/members
+• POST /api/groups/{groupId}/members
+• DELETE /api/groups/{groupId}/members/{memberId}
+• POST /api/groups/{groupId}/invite (to invite new members)
+• GET /api/groups/{groupId}/chat (group chat functionality)
+AI & ML Integration
+Crop Monitoring & Pest Detection
+• POST /api/ai/crop-monitoring – Upload image(s) for crop health analysis
+• GET /api/ai/crop-monitoring/results/{analysisId}
+• POST /api/ai/pest-detection – Upload image(s) for pest detection
+• GET /api/ai/pest-detection/results/{analysisId}
+• POST /api/ai/model-feedback – Submit user feedback on AI predictions
+• GET /api/ai/model-stats – Retrieve performance statistics
+Audio AI
+• POST /api/ai/audio – Process audio input (speech-to-text conversion)
+• GET /api/ai/audio/status/{audioId}
+• POST /api/ai/audio/feedback – Collect feedback on audio processing
+Market Forecasting & Trends
+• GET /api/ai/market-prices
+• GET /api/ai/demand-forecast
+• GET /api/ai/market-trends
+Resource Optimization & Transport
+• GET /api/ai/resource-optimization
+• GET /api/ai/transport-route
+Remote Sensing & Weather
+• POST /api/ai/remote-sensing – Trigger remote sensing analysis
+• GET /api/ai/remote-sensing/results/{taskId}
+• GET /api/ai/weather
+General AI Utilities
+• GET /api/ai/history – Retrieve history of AI analysis requests
+• POST /api/ai/re-run – Re-run an AI analysis job
+• POST /api/ai/queue – Add request to an AI processing queue
+• POST /api/ai/schedule – Schedule periodic AI tasks
+IoT Sensor Data Integration
+• POST /api/sensors/data – Ingest sensor readings
+• GET /api/sensors/data/{sensorId}
+• GET /api/sensors/alerts
+• PUT /api/sensors/{sensorId}/config – Update sensor configurations
+• GET /api/sensors/{sensorId}/status – Retrieve sensor diagnostics
+Geospatial & Mapping
+• GET /api/geospatial/maps
+• GET /api/geospatial/search (e.g., search for nearby farms, cold storage, transport providers)
+• GET /api/geospatial/alerts – Retrieve location-based notifications or alerts
+Translation & Multilingual Support
+• POST /api/translate – Translate content to a target language
+Offline Synchronization
+• POST /api/sync/inventory – Sync offline inventory changes
+• POST /api/sync/chat – Sync offline chat messages
+• POST /api/sync/orders – Sync offline order updates
+• POST /api/sync/settings – Sync offline user settings
+• POST /api/sync/conflict – Resolve data conflicts during sync
+• POST /api/sync/assets – Sync static assets/configuration (if required)
+Onboarding & Tutorials
+• GET /api/onboarding/tutorial
+• GET /api/onboarding/tips
+• GET /api/onboarding/checklist – Retrieve a checklist of onboarding tasks
+Cold Storage, Transportation, & Retail Partnerships
+• GET /api/partners/cold-storage
+• POST /api/partners/cold-storage
+• GET /api/partners/transport
+• POST /api/partners/transport
+• GET /api/partners/retail
+• POST /api/partners/retail
+• PUT /api/partners/update – Update partner details
+• GET /api/partners/{partnerId}/reviews – Retrieve partner reviews
+Traceability & Reviews
+• GET /api/traceability – Retrieve traceability data
+• POST /api/traceability/scan – Scan a QR/barcode for product tracking
+• POST /api/traceability/upload – Upload supporting traceability documents
+• GET /api/reviews
+• POST /api/reviews
+• PUT /api/reviews/{reviewId} (if editing is allowed)
+• DELETE /api/reviews/{reviewId}
+• GET /api/users/{userId}/reviews – Retrieve a user’s review history
+• PUT /api/reviews/moderate – (Admin/moderator action)
+Notifications & Alerts
+• GET /api/notifications – Retrieve all notifications for a user
+• PUT /api/notifications/{notificationId}/mark-read
+• DELETE /api/notifications/{notificationId}
+• POST /api/notifications/subscribe – Subscribe to notification topics
+• POST /api/notifications/unsubscribe – Unsubscribe from topics
+General Utility & Admin Endpoints
+• GET /api/config – Retrieve configuration data (feature toggles, API keys)
+• POST /api/logs – Submit client-side error logs or events
+• GET /api/search – Global search across inventory, forums, groups, etc.
+• GET /api/health – Health check endpoint
+• GET /api/version – Retrieve current API version
+• GET /api/admin/users – (Admin) List all users
+• PUT /api/admin/users/{userId}/ban – (Admin) Ban a user
+• GET /api/admin/logs – (Admin) Retrieve system logs
+• GET /api/feature-flags – Retrieve active feature flags
+Analytics & Reporting
+• GET /api/analytics/users – User engagement metrics
+• GET /api/analytics/sales – Sales and transaction reports
+• GET /api/analytics/system – System usage statistics
+
+DBMS Integration Requirements:
+
+• User & Authentication Data
+• Tables for user accounts, including fields such as userID (primary key), email, phone number, hashed password, and authentication tokens
+• Profile details table with language preferences, roles, device tokens (for push notifications), and verification statuses
+• Session management records (e.g., login timestamps, active sessions)
+• Audit logs for authentication events (e.g., failed logins, password changes)
+• Inventory & Product Data
+• Inventory table that stores item details: itemID, name, description, category, quantity, quality, pricing, seller/farmer reference, and image URLs/paths
+• Historical inventory records for tracking additions, updates, removals, and modifications
+• Product categorization, tagging, and search index fields to support advanced filtering and in-app searches
+• Data integrity constraints and validations (e.g., non-negative stock, mandatory fields)
+• Orders & Transactions Data
+• Orders table with orderID, buyerID, sellerID (or farmerID), order status, timestamps, and total amounts
+• Order items sub-table listing individual items per order, quantities, unit prices, and item-specific status
+• Transaction logs capturing payment confirmations, refunds, and cancellations with transaction IDs, timestamps, and payment method details
+• Order tracking and status history for real-time updates
+• Messaging & Chat Data
+• Conversations table with conversationID, participant userIDs, last activity timestamp, and status indicators
+• Messages table that includes messageID, conversationID, senderID, content (text and/or media references), timestamps, and read receipts
+• Caching or temporary storage for offline messages and synchronization metadata
+• Forum & Community Data
+• Forum threads table including threadID, title, content, creatorID, timestamp, view count, and vote counts
+• Comments table linked to threads (with commentID, threadID, userID, content, timestamps)
+• Moderation metadata such as flags, reports, and status fields for each thread or comment
+• Indexes on keywords, topics, and timestamps for fast forum searches
+• Cooperative & Group Formation Data
+• Groups table containing groupID, name, type (aggregation or cooperative), description, adminID, and creation date
+• Membership table to track group members with groupID, userID, join date, and roles (admin/member)
+• Invitation and request logs for joining groups or cooperatives
+• AI & ML Data Logging
+• Tables for logging AI requests (e.g., crop monitoring, pest detection, audio AI) with fields for requestID, userID, timestamp, input metadata, and reference to result storage
+• Feedback logs for AI predictions and model performance (ratings, corrections)
+• Historical records of AI processing jobs, including status, runtime metrics, and error logs
+• Mapping between uploaded images/audio and corresponding AI analysis results
+• IoT Sensor Data Integration
+• Sensor data table capturing sensorID, timestamp, sensor type (e.g., soil moisture, temperature), and reading values
+• Alerts table for sensor anomalies, threshold breaches, or data inconsistencies, with timestamps and sensorID references
+• Configuration tables for sensor metadata (location, calibration parameters, device status)
+• Geospatial Data
+• Tables for storing geolocation coordinates for farms, cold storage facilities, transport services, and retail partners
+• Reference data for mapping integration (e.g., region boundaries, GPS waypoints) that can be cross-referenced with external APIs
+• Indexes optimized for spatial queries and proximity searches
+• Payment & Transaction Data
+• Payment records table with fields for paymentID, orderID, transaction amount, payment method (UPI, Razorpay, etc.), status, and timestamps
+• Refund and dispute logs with references to payment records
+• Audit trails for payment processing events and callback responses
+• Traceability Data (Farm-to-Fork)
+• Traceability records table with productID/lotID, QR or barcode data, timestamped stages (harvesting, storage, processing, distribution)
+• Linked images or documents that verify each stage of the product’s journey
+• Historical logs that allow tracking of product movement and verification of authenticity
+• Reviews & Ratings Data
+• Reviews table with reviewID, userID (reviewer), product/order ID reference, rating value, review text, and timestamp
+• Moderation status and flagging fields to manage inappropriate content
+• Aggregation tables or computed columns for average ratings per seller/product
+• Notifications Data
+• Notifications table with notificationID, recipient userID, message/content, type (transaction, chat, system update), read/unread flag, and timestamp
+• User preference records for notification settings
+• Offline Synchronization Data
+• Tables (or local storage mechanisms) for temporarily caching offline transactions, inventory updates, messages, and settings changes
+• Conflict resolution logs and metadata to handle synchronization discrepancies when reconnected
+• Analytics & Reporting Data
+• Aggregated data tables for user engagement, inventory movements, order statistics, and system performance
+• Integration with BigQuery for large-scale analytics on historical data
+• Scheduled ETL jobs and transformation scripts to populate analytics dashboards
+• General Database & Data Management Tasks
+• Schema design with normalized tables, foreign key constraints, indexes, and relationships across modules
+• Data migration scripts and versioning of database schema
+• Backup and restore procedures, including disaster recovery planning
+• Security measures for data encryption (at rest and in transit), role-based access control, and compliance with data protection standards
+• Performance optimizations, including query tuning and caching strategies
+• Logging and auditing for data modifications, error tracking, and change history
+• Regular database maintenance tasks such as indexing, vacuuming (if using PostgreSQL), and cleanup of temporary offline data
+
+PWA:
+• Backend Integration Tasks:
+– Offline Synchronization Endpoints:
+• Create API endpoints that allow the app to synchronize data (like inventory updates or chat messages) when the connection is restored.
+• Ensure the backend supports conflict resolution in case of discrepancies between local and server data.
+– Push Notifications:
+• Set up backend services to trigger push notifications via the service worker when new content or updates are available.
+• Development Phase Considerations:
+– Early Planning:
+• PWA features must be planned early in the development lifecycle. This ensures that both the caching strategies and offline synchronization mechanisms are integrated from the start.
+– Parallel Development:
+• While the frontend team focuses on building the manifest, service worker, and offline UI, the backend should simultaneously work on endpoints that support offline data sync.
+– Iterative Testing:
+• Continuously test the PWA’s offline capabilities during development, ensuring smooth transitions between online and offline states.
+

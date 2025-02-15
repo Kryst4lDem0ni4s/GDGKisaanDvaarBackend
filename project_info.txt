@@ -1,0 +1,1153 @@
+Here is the current project's backend architecture, which will be further expanded, optimized, changed and developed upon:
+app/
+    controllers/
+        auth.py
+        chatbot.py
+        market.py
+    models/
+        model_types.py
+        response_model.py
+    helpers/
+        ai_helpers.py
+        api_helpers.py
+        google-services.json
+        kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json
+    routers/
+        auth2.py
+        cart.py
+        chatbot.py
+        inventory.py
+        market.py
+        marketplace.py
+        services.py
+    utils/
+        utils.py
+    config.py
+    database.py
+    main.py
+    schemas.py
+
+Here is the current code written for the project, within the currently available files and architecture. Your task is to understand the current code, and help the user make changes or write new code based on the current implementations. As you generate more code, repeatedly update your memory to remember the newly written code as well:
+
+app\controllers\auth.py:
+from fastapi import UploadFile, File
+import app.models.model_types as modelType
+from app.helpers import ai_helpers
+from app.utils import utils
+import json
+from typing import *
+import os
+import firebase_admin
+from firebase_admin import credentials, auth
+from fastapi import HTTPException
+
+# Initialize the Firebase Admin SDK with the downloaded service account key
+cred = credentials.Certificate("D:/DdriveCodes/SIH/app/helpers/kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
+firebase_admin.initialize_app(cred)
+
+
+# async def sign_up_user(sign_up_request: modelType.SignUpRequest):
+#     try:
+#         # Create a new user
+#         user = auth.create_user(
+#             email=sign_up_request.email,
+#             password=sign_up_request.password,
+#         )
+#         print('Successfully created new user:', user.uid)
+#         return user
+#     except Exception as e:
+#         print(f"Error creating user: {e}")
+#         return None
+
+async def sign_up_user(sign_up_request: modelType.SignUpRequest):
+    try:
+        # Create a new user
+        user = auth.create_user(
+            email=sign_up_request.email,
+            password=sign_up_request.password,
+            display_name=sign_up_request.username,
+            phone_number=sign_up_request.phonenumber
+        )
+        print('Successfully created new user:', user)
+        return user
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+async def login(login_request: modelType.LoginRequest):
+    try:
+        user = await auth.get_user_by_email(
+            email=login_request.email
+            )
+
+        return user
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+# Example usage
+#new_user = sign_up_user("user@example.com", "strongpassword123")
+
+app\controllers\chatbot.py:
+from fastapi import UploadFile, File
+import app.models.model_types as model_type
+from app.helpers import ai_helpers
+from app.utils import utils
+import json
+from typing import *
+
+
+async def chatbot(query: model_type.Query):
+    chat = query.query
+    result = ai_helpers.chatbot(chat)
+    return result
+
+async def recommend_price(crop: model_type.CropData):
+    result = ai_helpers.price_recommend(crop)
+    return result
+
+app\controllers\market.py:
+from app.helpers import api_helpers
+from typing import *
+
+
+async def display_market_trends():
+    http_method = "GET"
+    api_URL = "https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24"
+    Format = "format=json"
+    access_token = "579b464db66ec23bdd000001b4e6b405f9e145584bff0a3824f781e5"
+    result = api_helpers.execute_api(http_method,api_URL,Format,access_token)
+    return result
+
+app\helpers\api_helpers.py:
+from contextlib import redirect_stdout, redirect_stderr
+import requests
+import json
+import io
+
+def execute_api(http_method: str, api_url: str, api_params, access_token: str = None) -> str:
+    params_dict = {}
+    invalid_params = []
+    print("\n\n=========== Access Token ============\n\n")
+    print(access_token)
+    
+    for param in api_params:
+        if '=' in param:
+            key, value = param.split('=', 1)
+            params_dict[key] = value
+        else:
+            invalid_params.append(param)
+    
+    output = io.StringIO()
+    
+    with redirect_stdout(output), redirect_stderr(output):
+        if invalid_params:
+            print(f"Invalid parameters ignored: {invalid_params}")
+
+        headers = {
+            'Content-Type': 'application/json',
+        }
+
+        if access_token:
+            headers['Authorization'] = f'{access_token}'
+        
+        print("\n\n=========== Headers ============\n\n")
+        print(headers)
+        
+        print("\n\n=========== Params ============\n\n")
+        print(params_dict)
+        
+        http_method = http_method.lower()
+        response = None
+        
+        try:
+            if http_method == 'get':
+                #response = requests.get(api_url, headers=headers, params=api_params)
+                response = requests.get("https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24?api-key=579b464db66ec23bdd000001b4e6b405f9e145584bff0a3824f781e5&format=json")
+            elif http_method == 'post':
+                response = requests.post(api_url, headers=headers, json=params_dict)
+            elif http_method == 'put':
+                response = requests.put(api_url, headers=headers, json=params_dict)
+            elif http_method == 'delete':
+                response = requests.delete(api_url, headers=headers, json=params_dict)
+            else:
+                raise ValueError("Invalid HTTP method provided. Use 'GET', 'POST', 'PUT', or 'DELETE'.")
+            
+            print("\n\n=========== Response Status Code ============\n\n")
+            print(response.status_code)
+            
+            response.raise_for_status()
+            
+            try:
+                json_response = response.json()
+                j_response = json.dumps(json_response, indent=4, sort_keys=True)
+                print(j_response)
+            except ValueError:
+                print(f"Response Status Code: {response.status_code}")
+                print(f"Response Content: {response.text}")
+        except requests.exceptions.HTTPError as http_err:
+            print(f"HTTP error occurred: {http_err}")
+            if response:
+                print(f"Response Status Code: {response.status_code}")
+                print(f"Response Content: {response.content}")
+        except Exception as err:
+            print(f"Other error occurred: {err}")
+    return output.getvalue()
+
+app\models\model_types.py:
+from fastapi import UploadFile
+from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, constr, Field
+from typing import *
+
+
+class Language(BaseModel):
+    language: str
+
+class Query(BaseModel):
+    query: str
+    
+class SignUpRequest(BaseModel):
+    email: str
+    username: str
+    password: constr(min_length=8)
+    phonenumber: str = Field(..., pattern=r'^\+91\d{10}$')
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+# class Profile(BaseModel):
+#     fullname: str
+#     password: constr(min_length=8)
+#     phonenumber: str = Field(..., pattern=r'^\+91\d{10}$')
+#     address: str
+#     email: str
+#     city: str
+#     pincode:str = Field(..., pattern=r'^\d{6}$')
+    
+class ProfileData(BaseModel):
+    def __init__(self, occupation, address, state, city, pincode, profile_image, description):
+        self.occupation = occupation
+        self.address = address
+        self.state = state
+        self.city = city
+        self.pincode = pincode
+        self.profile_image = profile_image
+        self.description = description
+
+class CropData(BaseModel):
+    cropname: str
+    quantity: int
+    qualitygrade: str
+
+app\routers\auth2.py:
+from firebase_admin import credentials, initialize_app, auth
+from fastapi import UploadFile, File
+import firebase_admin._user_identifier
+import firebase_admin.auth
+import firebase_admin.instance_id
+import app.models.model_types as modelType
+from app.helpers import ai_helpers
+from app.utils import utils
+import json
+from typing import *
+import os
+import firebase_admin
+from fastapi import APIRouter, HTTPException
+
+# Initialize the Firebase Admin SDK with the downloaded service account key
+cred = credentials.Certificate("D:/DdriveCodes/SIH/app/helpers/kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
+initialize_app(cred)
+
+auth = auth()
+
+router = APIRouter()
+
+@router.post("/login")
+async def login(login_request: modelType.LoginRequest):
+    try:
+        user = await auth.get_user_by_email(
+            email=login_request.email,
+            password=login_request.password
+            )
+
+        return user
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+@router.post("/sign-up")
+async def sign_up_user(sign_up_request: modelType.SignUpRequest):
+    try:
+        # Create a new user
+        user = auth.create_user(
+            email=sign_up_request.email,
+            password=sign_up_request.password,
+            firstname=sign_up_request.firstname,
+            lastname=sign_up_request.lastname,
+            username=sign_up_request.username,
+            password=sign_up_request.password,
+            phonenumber=sign_up_request.phonenumber
+        )
+        print('Successfully created new user:', user)
+        return user
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Example usage
+#new_user = sign_up_user("user@example.com", "strongpassword123")
+
+@router.post("/build-profile")
+async def build_new_profile(build_profile_request: modelType.ProfileData):
+    try:
+        # Create a new user profile
+        user_profile = auth.UserInfo(
+            occupation = build_profile_request.occupation,
+            address = build_profile_request.address,
+            state = build_profile_request.state,
+            city = build_profile_request.city,
+            pincode = build_profile_request.pincode,
+            profile_image = build_profile_request.profile_image,
+            description = build_profile_request.description
+        )
+        
+        print('Successfully created new user profile:', user_profile)
+        user = auth.get_user
+
+        
+        return user_profile
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))  
+    
+    
+def get_active_user_session_info():
+    """User authentication per session is possible from flutter side, TODO"""
+    # Validate user's occupation (ensure they are the owner or an admin)
+    # user = await User.get_current_user()
+    # if user.occupation not in ["owner", "admin"]:
+    #     raise HTTPException(status_code=403, detail="Only owners or admins can update service listings.")
+    # https://firebase.google.com/docs/auth/android/manage-users
+    
+app\routers\cart.py:
+from firebase_admin import credentials, initialize_app, auth, db
+from fastapi import UploadFile, File
+import app.models.model_types as modelType
+from app.helpers import ai_helpers
+from app.utils import utils
+import json
+from typing import *
+import os
+import firebase_admin
+from fastapi import APIRouter, HTTPException
+
+# Initialize the Firebase Admin SDK with the downloaded service account key
+# cred = credentials.Certificate("C:\Users\Khwaish\Downloads\kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
+# initialize_app(cred)
+
+auth = auth()
+
+router = APIRouter()
+
+"""
+User Cart (in Database):
+user_id (reference to the user document)
+items (array of objects):
+item_id (reference to the inventory item document)
+quantity (number)
+farm_id (reference to the seller's document) - Required to ensure items are bought from the same farm
+
+API Endpoints:
+
+Add to Cart:
+POST /cart/add
+Body: item_id (ID of the item to add), quantity (desired quantity)
+View Cart:
+GET /cart
+Retrieve the user's cart items and total bill.
+Update Cart Quantity:
+PUT /cart/{item_id}
+Body: quantity (updated desired quantity)
+Remove from Cart:
+DELETE /cart/{item_id}
+Remove the specified item from the cart.
+Empty Cart:
+DELETE /cart/empty
+Clear all items from the user's cart.
+
+"""
+
+
+# @router.post("/cart/add")
+# async def add_to_cart(item_id: str, quantity: int):
+#     """
+#     Adds an item to the user's cart.
+#     """
+#     user_id = get_current_user_id()  # Replace with your authentication logic
+
+#     # Check if item exists
+#     inventory_ref = db.reference("inventory").child(item_id)
+#     inventory_data = await inventory_ref.get()
+
+#     if not inventory_data.exists():
+#         raise HTTPException(status_code=404, detail="Item not found")
+
+#     # Get farm ID from inventory data
+#     farm_id = inventory_data.val()["farm"]
+
+#     # Check if cart already has items from a different farm
+#     cart_ref = db.reference("carts").child(user_id)
+#     cart_snapshot = await cart_ref.get()
+
+#     if cart_snapshot.exists():
+#         cart_data = cart_snapshot.val()
+#         if cart_data and cart_data["items"] and cart_data["items"][0]["farm_id"] != farm_id:
+#             raise HTTPException(status_code=400, detail="Cart can only have items from the same farm")
+
+#     # Update or create cart
+#     cart_data = {"items": []} if not cart_snapshot.exists() else cart_snapshot.val()
+#     cart_data["items"].append({"item_id": item_id, "quantity": quantity, "farm_id": farm_id})
+#     await cart_ref.set(cart_data)
+
+#     return {"message": "Item added to cart successfully"}
+
+# @router.get("/cart")
+# async def view_cart():
+#     """
+#     Retrieves the user's cart items and calculates the total bill.
+#     """
+#     user_id = get_current_user_id()  # Replace with your authentication logic
+#     cart_ref = db.reference("carts").child(user_id)
+#     cart_snapshot = await cart_ref.get()
+
+#     cart_data = cart_snapshot.val() if cart_snapshot.exists() else {"items": []}
+#     total_bill = 0
+
+#     for item in cart_data.get("items", []):
+#         inventory_ref = db.reference("inventory").child(item["item_id"])
+#         inventory_data = await inventory_ref.get()
+#         if inventory_data.exists():
+#             item_price = inventory_data.val()["price"]["value"] * item["quantity"]
+#             total_bill += item_price
+
+#     return {"items": cart_data["items"], "total_bill": total_bill}
+
+# @router.put("/cart/{item_id}")
+# async def update_cart_quantity(item_id: str, quantity: int):
+#     """
+#     Updates the quantity of an item in the cart.
+#     """
+#     user_id = get_current_user_id()  # Replace with your authentication logic
+#     cart_ref = db.reference("carts").child(user_id)
+
+#     # Update cart item quantity
+#     cart_snapshot = await cart_ref.get()
+#     cart_data = cart_snapshot.val() if cart
+
+app\routers\chatbot.py:
+from fastapi import APIRouter, Depends, UploadFile,File
+import app.controllers.chatbot as controller
+import app.models.model_types as model_type
+from app.utils import utils
+from typing import List
+
+router = APIRouter()
+
+@router.post("/chatbot")
+async def chatbot(query:model_type.Query):
+    try:
+        # response = await auth.sign_up_user(
+        #     email=sign_up_request.email,
+        #     password=sign_up_request.password,
+        # )
+        reply = await controller.chatbot(query)
+        print("TREND:",reply)
+        #respponse = utils.prettify_response(trends)
+        return {
+            "status": "success",
+            "message": "Here are the required market trends",
+            "data": reply
+        }
+    except Exception as e:
+        return {
+            "status": False,
+            "message": f"An error occurred: {e}",
+            "data": None
+        }
+
+app\routers\inventory.py:
+from firebase_admin import credentials, initialize_app, auth, db
+from fastapi import UploadFile, File
+import app.models.model_types as modelType
+from app.helpers import ai_helpers
+from app.utils import utils
+import json
+from typing import *
+import os
+import firebase_admin
+from fastapi import APIRouter, HTTPException
+
+# Initialize the Firebase Admin SDK with the downloaded service account key
+# cred = credentials.Certificate("D:/DdriveCodes/SIH/app/helpers/kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
+# initialize_app(cred)
+
+#auth = auth()
+
+router = APIRouter()
+
+@router.post("/create-inventory-item")
+def create_inventory_item(name, category, quantity, storage, description, price, item_id=None, rating=0.0, item_status="in stock"):
+    try:
+        storage_collection = db.collection(storage)  # Use storage as collection name
+
+        # Generate a unique ID if item_id is not provided
+        if not item_id:
+            item_id = storage_collection.document().id
+
+        doc_ref = storage_collection.document(item_id)
+        doc_ref.set({
+            "name": name,
+            "category": category,
+            "quantity": {
+                "value": quantity,
+                "unit": "kg"  # kg, gm, pound, etc options
+            },
+            "storage": storage,  # self_stored or externally_stored
+            "description": description,
+            "price": {
+                "value": price,
+                "unit": "kg"  # kg, gm, pound, etc options
+            },
+            "ratings": [],  # an empty list for ratings
+            "average_rating": 0.0,  # Initialize average rating to zero
+            "item_status": item_status,  # item status field (in stock, sold, etc)
+        })
+        print("Inventory item created:", doc_ref)
+
+        return {"status": "success", "message": "Inventory item created successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Function to retrieve all items from the inventory based on storage type.
+@router.get("/inventory/<storage>")
+def get_items1(storage):
+    try:
+        storage_collection = db.collection(storage)  # Use storage type as collection name
+        docs = storage_collection.get()
+        items = []
+        for doc in docs:
+            items.append(doc.to_dict())
+        return items
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Function to retrieve all items from the inventory.
+@router.get("/inventory")
+def get_items():
+    try:
+        self_stored_collection = db.collection("self_stored")
+        self_stored_docs = self_stored_collection.get()
+
+        externally_stored_collection = db.collection("externally_stored")
+        externally_stored_docs = externally_stored_collection.get()
+
+        all_items = []
+        all_items.extend(doc.to_dict() for doc in self_stored_docs)
+        all_items.extend(doc.to_dict() for doc in externally_stored_docs)
+
+        return all_items
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Example usage:
+# create_inventory_item("Apples", "fruits", 10, "self", "Fresh, red apples", 20)
+@router.delete("/inventory/<storage>/<item_id>")
+def delete_item(storage, item_id):
+    try:
+        storage_collection = db.collection(storage)
+        doc_ref = storage_collection.document(item_id)
+        doc_ref.delete()
+        return {"status": "success", "message": "Item deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.put("/inventory/<storage>/<item_id>")
+def update_item(storage, item_id, name: Optional[str] = None, category: Optional[str] = None, quantity: Optional[int] = None, description: Optional[str] = None, price: Optional[float] = None):
+    try:
+        storage_collection = db.collection(storage)
+        doc_ref = storage_collection.document(item_id)
+
+        data = {}
+        if name is not None:
+            data["name"] = name
+        if category is not None:
+            data["category"] = category
+        if quantity is not None:
+            data["quantity"] = quantity
+            if quantity == 0:
+                data["item_status"] = "out of stock"
+        if description is not None:
+            data["description"] = description
+        if price is not None:
+            data["price"] = price
+
+        doc_ref.update(data)
+        return {"status": "success", "message": "Item updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+app\routers\market.py:
+from fastapi import APIRouter, Depends, UploadFile,File
+import app.controllers.market as controller
+import app.controllers.chatbot as controller2
+import app.models.model_types as model_type
+from app.utils import utils
+from typing import List
+
+router = APIRouter()
+
+@router.post("/market-trends")
+async def display_market_trends():
+    try:
+        # response = await auth.sign_up_user(
+        #     email=sign_up_request.email,
+        #     password=sign_up_request.password,
+        # )
+        trends = await controller.display_market_trends()
+        print("TREND:",trends)
+        #respponse = utils.prettify_response(trends)
+        return {
+            "status": "success",
+            "message": "Here are the required market trends",
+            "data": trends
+        }
+    except Exception as e:
+        return {
+            "status": False,
+            "message": f"An error occurred: {e}",
+            "data": None
+        }
+
+@router.post("/price-recoomendation")
+async def price_recommend(crop_data:model_type.CropData):
+    try:
+        # response = await auth.sign_up_user(
+        #     email=sign_up_request.email,
+        #     password=sign_up_request.password,
+        # )
+        price = await controller2.recommend_price(crop_data)
+        print("PRICE:",price)
+        #respponse = utils.prettify_response(trends)
+        return {
+            "status": "success",
+            "message": "Here are the required market trends",
+            "data": price
+        }
+    except Exception as e:
+        return {
+            "status": False,
+            "message": f"An error occurred: {e}",
+            "data": None
+        }
+        
+app\routers\marketplace.py:
+from firebase_admin import credentials, initialize_app, auth, db
+from fastapi import UploadFile, File
+import app.models.model_types as modelType
+from app.helpers import ai_helpers
+from app.utils import utils
+import json
+from typing import *
+import os
+import firebase_admin
+from fastapi import APIRouter, HTTPException
+
+# Initialize the Firebase Admin SDK with the downloaded service account key
+# cred = credentials.Certificate("D:/DdriveCodes/SIH/app/helpers/kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
+# initialize_app(cred)
+
+#auth = auth()
+
+router = APIRouter()
+
+"""
+The marketplace should list items based on the category of the items, and also based on other filters 
+like quanity, farmer/farm, location, price, ratings, etc in ascending order. It should not display out of stock items. 
+It should retrive all the listings made by farmer accounts based on these conditions.
+The endpoints to be used are:
+
+/marketplace
+/marketplace/query={query}
+/marketplace/{item_category}
+/marketplace/{item_category}/query={query}
+/marketplace/{farm}/query={query}
+/marketplace/{pincode}/query={query}
+/marketplace/query={query}/sorted_by_ratings
+/marketplace/query={query}/sorted_by_price
+/marketplace/query={query}/sorted_by_quantity
+
+args:
+- item_category: str OR Other filters 
+- query: str
+return:
+- list of items
+
+TODO:
+Implement being able to specify a location's radius:
+eg. 100 km range from 201305 pincode
+TODO:
+Multiple filters applied at the same time is currently out of scope, implement later.
+
+"""
+
+def find_common_items(query_results1, query_results2):
+    """
+    Finds common items in two query results.
+    """
+    items1_set = set(query_results1)
+    items2_set = set(query_results2)
+    common_items_set = items1_set.intersection(items2_set)
+    return common_items_set
+
+@router.get("/marketplace")
+async def get_all_marketplace_items():
+  """
+  Retrieves all in-stock listings from the database.
+  """
+  inventory_ref = db.reference("inventory")
+  # Query documents where item_status is "in stock"
+  query = inventory_ref.where("item_status", "==", "in stock")
+  documents = query.get()
+
+  items = []
+  for doc in documents:
+    # item_data = doc.to_dict()
+    item_data = dict(doc)
+    items.append(item_data)
+
+  return items
+
+@router.get("/marketplace/query={query}")
+async def get_marketplace_items_by_query(query):
+    """
+    Retrieves marketplace items based on a search query.
+    """
+    inventory_ref = db.reference("inventory")
+    # Query documents where the name or description contains the query
+    query_results = inventory_ref.order_by_child("name").start_at(query).end_at(query + "\uf8ff").get()
+
+    items = []
+    for doc in query_results:
+        #item_data = dict(doc)
+        # item_data = doc.to_dict()
+        if item_data["item_status"] == "in stock":  # Filter in-stock items
+            items.append(item_data)
+
+    return items
+
+# @router.get("/marketplace/{item_category}/query={query}")
+# async def get_marketplace_items_by_category_and_query(item_category: str, query: str):
+#     """
+#     Retrieves marketplace items based on a category and search query.
+#     """
+#     inventory_ref = db.reference("inventory")
+    
+#     # Query documents where the category matches and the name or description contains the query
+#     query_results = inventory_ref.order_by_child("category").start_at(item_category).end_at(item_category + "\uf8ff")
+#     query_results2 = inventory_ref.order_by_child("name").start_at(query).end_at(query + "\uf8ff")
+    
+#     items = []
+#     for doc in query_results:
+#         # item_data = doc.to_dict()
+#         item_data = dict(doc)
+#         if item_data["item_status"] == "in stock":  # Filter in-stock items
+#             items.append(item_data)
+
+#     return items
+
+@router.get("/marketplace/{item_category}/query={query}")
+async def get_marketplace_items_by_category_and_query(item_category, query):
+    """
+    Retrieves items based on category and a search query.
+    """
+    inventory_ref = db.reference("inventory")
+    # Query documents by category and search query
+    query_results = inventory_ref.order_by_child("category").start_at(item_category).end_at(item_category + "\uf8ff")
+    query_results2 = inventory_ref.order_by_child("name").start_at(query).end_at(query + "\uf8ff")
+
+    # Find common items
+    common_items_Set = find_common_items(query_results, query_results2)
+    
+    items = []
+    for doc in common_items_Set:
+        # item_data = doc.to_dict()
+        item_data = dict(doc)
+        if item_data["item_status"] == "in stock":  # Filter in-stock items
+            items.append(item_data)
+
+    return items
+
+@router.get("/marketplace/{farm}/query={query}")
+async def get_marketplace_items_by_farm_and_query(farm, query):
+    """
+    Retrieves items based on farm and a search query.
+    """
+    inventory_ref = db.reference("inventory")
+    # Query documents by farm and search query
+    query_results = inventory_ref.order_by_child("farm").start_at(farm).end_at(farm + "\uf8ff")
+    query_results2 = inventory_ref.order_by_child("name").start_at(query).end_at(query + "\uf8ff")
+
+    # Find common items
+    common_items_set = find_common_items(query_results, query_results2)
+
+    items = []
+    for doc in common_items_set:
+        item_data = dict(doc)
+        if item_data["item_status"] == "in stock":  # Filter in-stock items
+            items.append(item_data)
+
+    return items
+
+@router.get("/marketplace/{item_category}")
+async def get_marketplace_items_by_category(item_category):
+    """
+    Retrieves items based on category.
+    """
+    inventory_ref = db.reference("inventory")
+    # Query documents by category
+    query_results = inventory_ref.order_by_child("category").start_at(item_category).end_at(item_category + "\uf8ff")
+
+    items = []
+    for doc in query_results:
+        item_data = dict(doc)
+        if item_data["item_status"] == "in stock":  # Filter in-stock items
+            items.append(item_data)
+
+    return items
+
+@router.get("/marketplace/query={query}/sort_by_price")
+async def get_marketplace_items_by_query_and_sort_by_price(query):
+    """
+    Retrieves items based on a search query and sorts them by price.
+    """
+    inventory_ref = db.reference("inventory")
+
+    # Query documents where name or description contains the query
+    query_results = inventory_ref.order_by_child("name").start_at(query).end_at(query + "\uf8ff")
+    query_results2 = inventory_ref.order_by_child("description").start_at(query).end_at(query + "\uf8ff")
+
+    # Find common items
+    common_items_set = find_common_items(query_results, query_results2)
+
+    # Sort common items by price
+    sorted_items = sorted(common_items_set, key=lambda item: item["price"]["value"])
+
+    return sorted_items
+
+@router.get("/marketplace/query={query}/sort_by_quantity")
+async def get_marketplace_items_by_query_and_sort_by_quantity(query):
+    """
+    Retrieves items based on a search query and sorts them by quantity.
+    """
+    inventory_ref = db.reference("inventory")
+
+    # Query documents where name or description contains the query
+    query_results = inventory_ref.order_by_child("name").start_at(query).end_at(query + "\uf8ff")
+    query_results2 = inventory_ref.order_by_child("description").start_at(query).end_at(query + "\uf8ff")
+
+    # Find common items
+    common_items_set = find_common_items(query_results, query_results2)
+
+    # Sort common items by quantity
+    sorted_items = sorted(common_items_set, key=lambda item: item["quantity"]["value"])
+
+    return sorted_items
+
+@router.get("/marketplace/query={query}/sorted_by_ratings")
+async def get_marketplace_items_by_query_and_sort_by_ratings(query):
+    """
+    Retrieves items based on a search query and sorts them by average rating.
+    """
+    inventory_ref = db.reference("inventory")
+
+    # Query documents where name or description contains the query
+    query_results = inventory_ref.order_by_child("name").start_at(query).end_at(query + "\uf8ff")
+    query_results2 = inventory_ref.order_by_child("description").start_at(query).end_at(query + "\uf8ff")
+
+    # Find common items
+    common_items_set = find_common_items(query_results, query_results2)
+
+    # Sort common items by average rating
+    sorted_items = sorted(common_items_set, key=lambda item: item["average_rating"], reverse=True)
+
+    return sorted_items
+
+@router.get("/marketplace/{pincode}/query={query}")
+async def get_marketplace_items_by_pincode_and_query(pincode, query):
+    """
+    Retrieves items based on a pincode and a search query.
+    """
+    inventory_ref = db.reference("inventory")
+
+    # Query documents by pincode and search query
+    query_results = inventory_ref.order_by_child("pincode").start_at(pincode).end_at(pincode + "\uf8ff")
+    query_results2 = inventory_ref.order_by_child("name").start_at(query).end_at(query + "\uf8ff")
+
+    # Find common items
+    common_items_set = find_common_items(query_results, query_results2)
+
+    items = []
+    for doc in common_items_set:
+        item_data = dict(doc)
+        if item_data["item_status"] == "in stock":  # Filter in-stock items
+            items.append(item_data)
+
+    return items
+
+app\routers\services.py:
+from firebase_admin import credentials, initialize_app, auth
+from fastapi import UploadFile, File
+import app.models.model_types as modelType
+from app.helpers import ai_helpers
+from app.utils import utils
+import json
+from typing import *
+import os
+import firebase_admin
+from fastapi import APIRouter, HTTPException
+
+# Initialize the Firebase Admin SDK with the downloaded service account key
+cred = credentials.Certificate("C:\Users\Khwaish\Downloads\kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
+initialize_app(cred)
+
+auth = auth()
+
+router = APIRouter()
+
+from firebase_admin import db
+
+@router.post("/cold_storage_services")
+def create_cold_storage_service(name, address, phone_number, email=None, website=None, description="", minimum_quantity=0, areas_served=[], payment_methods=[], rating=0, favorites=[], status="active"):
+    """Creates a new cold storage service document in the Firebase database."""
+    
+    # Validate user's occupation (ensure they are a customer) TO-DO
+    # user = await User.get_current_user()
+    # if user.occupation != "customer":
+    #     raise HTTPException(status_code=403, detail="Only customers can create service listings.")
+    
+    data = {
+        "name": name,
+        "address": address,
+        "phone_number": phone_number,
+        "email": email,
+        "website": website,
+        "description": description,
+        "minimum_quantity": minimum_quantity,
+        "areas_served": areas_served,
+        "payment_methods": payment_methods,
+        "rating": rating,
+        "status": status
+    }
+
+    # Assuming you have already initialized Firebase and obtained a database reference
+    db_ref = db.reference("cold_storage_services")
+    new_ref = db_ref.push()
+    new_ref.set(data)
+    return new_ref.key  # Returns the generated ID for the new document
+
+@router.get("/cold_storage_services")
+async def get_cold_storage_services():
+    db_ref = db.reference("cold_storage_services")
+    data = db_ref.get()
+    return data
+
+@router.get("/cold_storage_services/{service_id}")
+async def get_cold_storage_service(service_id):
+    db_ref = db.reference(f"cold_storage_services/{service_id}")
+    data = db_ref.get()
+    return data
+
+@router.put("/cold_storage_services/{service_id}")
+async def update_cold_storage_service(service_id, data: dict):
+    
+    """User authentication per session is possible from flutter side, TODO"""
+    # Validate user's occupation (ensure they are the customer that uploaded.)
+    # user = await User.get_current_user()
+    # if user.occupation not in ["customer"]:
+    #     raise HTTPException(status_code=403, detail="Only owners or admins can update service listings.")
+    # https://firebase.google.com/docs/auth/android/manage-users
+
+    # data = {
+    #     "name": name,
+    #     "address": address,
+    #     "phone_number": phone_number,
+    #     "email": email,
+    #     "website": website,
+    #     "description": description,
+    #     "minimum_quantity": minimum_quantity,
+    #     "areas_served": areas_served,
+    #     "payment_methods": payment_methods,
+    #     "rating": rating,
+    #     "status": status
+    # }
+
+    db_ref = db.reference(f"cold_storage_services/{service_id}")
+    db_ref.update(data)
+    return data
+
+@router.delete("/cold_storage_services/{service_id}")
+async def delete_cold_storage_service(service_id):
+
+    db_ref = db.reference(f"cold_storage_services/{service_id}")
+    db_ref.delete()
+    return {"message": "Service listing deleted successfully"}
+
+# @router.patch("/cold_storage_services/{service_id}/favorite")
+# async def mark_as_favorite(service_id):
+    
+#     # Validate user's occupation (ensure they are a farmer)
+#     user = await User.get_current_user()
+#     # if user.occupation != "farmer":
+#     #     raise HTTPException(status_code=403, detail="Only farmers can mark services as favorites.")
+
+#     # Add the service to the user's favorites array
+#     user_ref = db.reference(f"users/{user.uid}")
+#     favorites = user_ref.child("favorites").get() or []
+#     favorites.append(service_id)
+#     user_ref.child("favorites").set(favorites)
+
+#     return {"message": "Service marked as favorite"}
+
+# @router.patch("/cold_storage_services/{service_id}/unfavorite")
+# async def unmark_as_favorite(service_id):
+#     # Validate user's occupation (ensure they are a farmer)
+#     user = await User.get_current_user()
+#     # if user.occupation != "farmer":
+#     #     raise HTTPException(status_code=403, detail="Only farmers can unmark services as favorites.")
+
+#     # Remove the service from the user's favorites array
+#     user_ref = db.reference(f"users/{user.uid}")
+#     favorites = user_ref.child("favorites").get() or []
+#     favorites = [favorite for favorite in favorites if favorite != service_id]
+#     user_ref.child("favorites").set(favorites)
+
+#     return {"message": "Service unmarked as favorite"}
+
+app\utils\utils.py:
+def prettify_response(data):
+    response = {
+        "Catalog UUID": data["catalog_uuid"],
+        "Description": data["desc"],
+        "Created Date": data["created_date"],
+        "Title": data["title"],
+        "Source": data["source"],
+        "Total Entries": data["total"],
+        "Last Updated Date": data["updated_date"],
+        "Market Prices Data": []
+    }
+    
+    for entry in data["field"]:
+        if "Arrival_Date" in entry:
+            market_data = {
+                "Arrival Date": entry["Arrival_Date"],
+                "Commodity": entry["Commodity"],
+                "District": entry["District"],
+                "Market": entry["Market"],
+                "Max Price": entry["Max_Price"],
+                "Min Price": entry["Min_Price"],
+                "Modal Price": entry["Modal_Price"],
+                "State": entry["State"],
+                "Variety": entry["Variety"]
+            }
+            response["Market Prices Data"].append(market_data)
+    
+    return response
+
+app\config.py:
+from pydantic import EmailStr
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+        DATABASE_URL: str
+        MONGO_INITDB_DATABASE: str
+        OPENAI_API_KEY: str
+        CLIENT_ORIGIN: str
+        EMAIL_FROM: EmailStr
+
+        # Existing settings
+        CLIENT_ORIGIN: str
+
+        # Cognito settings
+        COGNITO_USER_POOL_ID: str
+        COGNITO_REGION: str
+        COGNITO_CLIENT_ID: str
+        COGNITO_CLIENT_SECRET: str
+        AWS_ACCESS_KEY_ID: str
+        AWS_SECRET_ACCESS_KEY: str
+        AZURE_ENDPOINT: str
+        API_KEY: str
+        API_VERSION: str
+
+        class Config:
+                env_file = './.env'
+
+ 
+settings = Settings()
+
+app\main.py:
+from fastapi import FastAPI
+from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
+load_dotenv()
+from app.config import settings
+from app.routers import auth,market,chatbot,auth2,marketplace,inventory
+app = FastAPI()
+
+origins = [settings.CLIENT_ORIGIN]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth.router, tags=["Authentication"], prefix="/api/auth")
+app.include_router(market.router, tags=["Market"], prefix="/api/market")
+app.include_router(chatbot.router, tags=["Chatbot"], prefix="/api/chatbot")
+#app.include_router(auth2.router, tags=["Auth2"], prefix="/api/Auth2")
+app.include_router(marketplace.router, tags=["Marketplace"], prefix="/api/marketplace")
+app.include_router(inventory.router, tags=["Inventory"], prefix="/api/inventory")
+
+@app.get("/health")
+async def root():
+    return {"message": "API is working fine."}
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app", host="127.0.0.1", port=8000, log_level="info", reload=True
+    )
+
+# App run command
+# uvicorn app.main:app --reload
+
+# Swagger URL for this API's
+# http://127.0.0.1:8000/docs#/

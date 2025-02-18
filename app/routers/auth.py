@@ -1,12 +1,12 @@
 from firebase_admin import credentials, initialize_app, auth
-from fastapi import UploadFile, File
+from fastapi import UploadFile, File, requests
 import firebase_admin._user_identifier
 import firebase_admin.auth
 import firebase_admin.instance_id
 import app.models.model_types as modelType
 from app.helpers import ai_helpers
 from app.utils import utils
-from typing import Dict, Any
+from typing import Dict, Any, List
 from pydantic import EmailStr, Field
 from fastapi import HTTPException, status
 from app.helpers.ai_helpers import EmailAddress, PhoneNumber
@@ -30,6 +30,9 @@ from pydantic import BaseModel
 router = APIRouter()
 
 cred = credentials.Certificate(dotenv.CREDENTIALS_FILE)
+FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"
+FCM_URL = "https://fcm.googleapis.com/fcm/send"
+
 initialize_app(cred)
 
 auth_service = auth
@@ -41,6 +44,56 @@ class EmailRequest(BaseModel):
 class UpdatePasswordRequest(BaseModel):
     uid: str
     new_password: str
+    
+    
+@router.post("/sync")
+async def sync_data(data: List[Dict[str, Any]]):
+    """
+    API to sync offline data when the user comes online.
+    """
+    try:
+        ref = db.reference("synced_data")
+        for item in data:
+            item_id = item.get("id")
+            ref.child(item_id).set(item)
+        return {"status": "success", "message": "Data synced successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sync")
+async def fetch_updates():
+    """
+    Fetch updates for offline users when they come online.
+    """
+    try:
+        ref = db.reference("synced_data")
+        updates = ref.get()
+        return {"updates": updates}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/send-notification")
+async def send_notification(device_token: str, title: str, body: str):
+    """
+    Send push notification to a device using Firebase Cloud Messaging.
+    """
+    headers = {
+        "Authorization": f"key={FCM_SERVER_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "to": device_token,
+        "notification": {
+            "title": title,
+            "body": body
+        }
+    }
+    response = requests.post(FCM_URL, json=payload, headers=headers)
+
+    if response.status_code == 200:
+        return {"status": "success", "message": "Notification sent"}
+    else:
+        raise HTTPException(status_code=500, detail=response.text)
 
 @router.post("/register")
 async def register(
@@ -63,17 +116,17 @@ async def register(
             await db_instance.remove(f"users/{user.uid}")
             return user
         
-        # Verify phone number or email in Firebase console
-        phone_number = verification_request.phone_number
-        email = verification_request.email
+        # # Verify phone number or email in Firebase console
+        # phone_number = verification_request.phone_number
+        # email = verification_request.email
 
-        # Check Email validation
-        if not ai_helpers._validate_email(email):
-            raise ValueError("Please check your email address. Wrong format.")
+        # # Check Email validation
+        # if not ai_helpers._validate_email(email):
+        #     raise ValueError("Please check your email address. Wrong format.")
             
-        # Check Phone number validation  
-        if not ai_helpers._validate_phone(phone_number):
-            raise ValueError("Please check your phone number. Invalid or incorrect format.")
+        # # Check Phone number validation  
+        # if not ai_helpers._validate_phone(phone_number):
+        #     raise ValueError("Please check your phone number. Invalid or incorrect format.")
 
         # Create new user without verifying existing registration
         user = await auth_service.create_user(
@@ -170,6 +223,12 @@ async def build_new_profile(build_profile_request: modelType.ProfileData):
     try:
         # Create a new user profile
         user_profile = auth.UserInfo(
+            email = build_profile_request.email,
+            first_name = build_profile_request.first_name,
+            last_name = build_profile_request.last_name,
+            gender = build_profile_request.gender,
+            age = build_profile_request.age,
+            phone_number = build_profile_request.phone_number,
             occupation = build_profile_request.occupation,
             address = build_profile_request.address,
             state = build_profile_request.state,
@@ -180,9 +239,9 @@ async def build_new_profile(build_profile_request: modelType.ProfileData):
         )
         
         print('Successfully created new user profile:', user_profile)
-        user = auth.get_user
 
-        
+        # user = auth.get_user
+
         return user_profile
     
     except ValueError as e:
@@ -191,12 +250,8 @@ async def build_new_profile(build_profile_request: modelType.ProfileData):
         raise HTTPException(status_code=500, detail=str(e))  
     
     
-def get_active_user_session_info():
-    """User authentication per session is possible from flutter side, TODO"""
-    # Validate user's occupation (ensure they are the owner or an admin)
-    # user = await User.get_current_user()
-    # if user.occupation not in ["owner", "admin"]:
-    #     raise HTTPException(status_code=403, detail="Only owners or admins can update service listings.")
-    # https://firebase.google.com/docs/auth/android/manage-users
+@router.get("/active-user-session")
+async def active_user_session():
+    return AuthService.get_active_user_session_info()
     
     

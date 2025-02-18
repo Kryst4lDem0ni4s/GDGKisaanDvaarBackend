@@ -30,8 +30,16 @@ class LoginRequest(BaseModel):
 #     pincode:str = Field(..., pattern=r'^\d{6}$')
     
 class ProfileData(BaseModel):
-    def __init__(self, occupation, address, state, city, pincode, profile_image, description):
+    def __init__(self, uid, email, first_name, last_name, gender, age, phone_number, occupation, role, address, state, city, pincode, profile_image, description):
+        # self.uid = user.uid
+        self.email = email
+        self.first_name = first_name
+        self.profile_image = last_name
+        self.gender = gender
+        self.profile_image = age
+        self.gender = phone_number
         self.occupation = occupation
+        self.role = role
         self.address = address
         self.state = state
         self.city = city

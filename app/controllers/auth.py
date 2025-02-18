@@ -67,6 +67,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from firebase_admin import db as db_service
 from firebase_admin import auth
+from models.model_types import ProfileData
+
 
 
 app = FastAPI()
@@ -83,6 +85,15 @@ class UserAuth:
             db_instance = db_service()
             await db_instance.remove(f"users:{user.uid}")  # Cleanup if error occurs
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    
+    @staticmethod
+    async def get_current_user():
+        """Placeholder function to get the current user."""
+        if ProfileData is not None:
+            return ProfileData
+        else:
+            return ProfileData(uid="dummy_uid", email="dummy@example.com")
+
 
 class AuthService:
     
@@ -154,3 +165,25 @@ class AuthService:
                 detail=str(e)
             )
 
+async def get_active_user_session_info():
+    """Get information about the active user session."""
+    try:
+        # Validate user's occupation (ensure they are the owner or an admin)
+        user = await UserAuth.get_current_user() 
+        if user.role not in ["owner", "admin"]:
+            raise HTTPException(status_code=403, detail="Only owners or admins can update service listings.")
+        
+        # Get the active user session info from Firebase Authentication
+        user_info = auth.get_user(user.uid)  # Assuming 'user.uid' is the user identifier
+        
+        return {
+            # "uid": user_info.uid,
+            "email": user_info.email,
+            "display_name": user_info.display_name,
+            "photo_url": user_info.photo_url,
+            # Add other relevant information as needed
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    

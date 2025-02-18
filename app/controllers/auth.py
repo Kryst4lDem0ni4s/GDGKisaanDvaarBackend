@@ -4,9 +4,14 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from firebase_admin import db as db_service
 from firebase_admin import auth
+import firebase_admin
 from models.model_types import ProfileData
 
 app = FastAPI()
+
+# Ensure Firebase is initialized
+if not firebase_admin._apps:
+    firebase_admin.initialize_app()
 
 class UserAuth:
         

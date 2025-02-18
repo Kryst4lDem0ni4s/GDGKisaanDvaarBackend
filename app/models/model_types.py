@@ -3,6 +3,10 @@ from pydantic import BaseModel, root_validator
 from pydantic import BaseModel, EmailStr, constr, Field
 from typing import *
 
+class UserSettings(BaseModel):
+    notifications_enabled: bool
+    dark_mode: bool
+    privacy_level: str  # Example: "public" or "private"
 
 class Language(BaseModel):
     language: str
@@ -16,9 +20,23 @@ class SignUpRequest(BaseModel):
     password: str
     phonenumber: str = Field(..., pattern=r'^\+91\d{10}$')
 
+class InventoryItem(BaseModel):
+    name: str
+    category: str
+    quantity: int
+    description: Optional[str] = None
+    price: Optional[float] = None
+
 class LoginRequest(BaseModel):
     email: str
     password: str
+    
+class EmailRequest(BaseModel):
+    email: str
+    
+class UpdatePasswordRequest(BaseModel):
+    uid: str
+    new_password: str
 
 # class Profile(BaseModel):
 #     fullname: str

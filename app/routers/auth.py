@@ -1,3 +1,5 @@
+import os
+import dotenv 
 from firebase_admin import credentials, initialize_app, auth
 from fastapi import Request, UploadFile, File, requests
 import firebase_admin._user_identifier
@@ -10,40 +12,33 @@ from typing import Dict, Any, List
 from pydantic import EmailStr, Field
 from fastapi import HTTPException, status
 from app.helpers.ai_helpers import EmailAddress, PhoneNumber
-from app.models.model_types import UserInDB, UserCreate
+from app.models.model_types import EmailRequest, Language, UpdatePasswordRequest, UserSettings
 from app.helpers import ai_helpers
 from app.utils import utils
 from firebase_admin import db
-from app.models.model_types import UserInDB, UserCreate
 import firebase_admin
 from fastapi import APIRouter, Depends, Request, HTTPException
 import firebase_admin
-import dotenv 
 import smtplib  # For sending reset emails (Note: You might need to install this library)
 from app.controllers.auth import UserAuth, AuthService
-from pydantic import BaseModel
 
 
+dotenv.load_dotenv()
+CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
+cred = credentials.Certificate(CREDENTIALS_FILE)
 
-# Initialize the Firebase Admin SDK with the downloaded service account key
-router = APIRouter()
-
-cred = credentials.Certificate(dotenv.CREDENTIALS_FILE)
 FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"
 FCM_URL = "https://fcm.googleapis.com/fcm/send"
 
-initialize_app(cred)
+initialize_app(cred, {"databaseURL": os.getenv("DATABASE_URL")})
+
+router = APIRouter()
 
 auth_service = auth
 db_service = db
 
-class EmailRequest(BaseModel):
-    email: str
-    
-class UpdatePasswordRequest(BaseModel):
-    uid: str
-    new_password: str
-    
+def get_db_reference(user_id: str, path: str = "settings"):
+    return db.reference(f"users/{user_id}/{path}")   
     
 @router.post("/sync")
 async def sync_data(data: List[Dict[str, Any]]):
@@ -106,13 +101,13 @@ async def register(
         )
         if user is not None:
             db_instance = db_service()
-            await db_instance.remove(f"users/{user.uid}")
+            db.reference(f"users/{user.uid}").delete()
             raise ValueError("User already registered")
 
         # Verify password
         if verification_request.password == login_request.password:
             db_instance = db_service()
-            await db_instance.remove(f"users/{user.uid}")
+            db.reference(f"users/{user.uid}").delete()
             return user
         
         # # Verify phone number or email in Firebase console
@@ -141,9 +136,7 @@ async def register(
         return {"user": user}
     
     except Exception as e:
-        db_instance = db_service()
-        await db_instance.remove(f"users:{user.uid}")  # Clean up if error occurs
-        raise HTTPException(
+        await db.reference(f"users/{user.uid}").delete()(
             status_code=status.HTTP_400,
             detail=str(e),
         )
@@ -152,7 +145,7 @@ async def register(
 @router.post("/login")
 async def login(login_request: modelType.LoginRequest):
     try:
-        user = await auth_service.get_user_by_email(
+        user = auth_service.get_user_by_email(
             email=login_request.email,
             password=login_request.password
         )
@@ -163,8 +156,7 @@ async def login(login_request: modelType.LoginRequest):
         raise HTTPException(status_code=status.HTTP_401, detail="Invalid credentials")
     
     except Exception as e:
-        db_instance = db_service()
-        await db_instance.remove(f"users:{user.uid}")  # Clean up if error occurs
+        db.reference(f"users/{user.uid}").delete()
         raise HTTPException(
             status_code=status.HTTP_403,
             detail=str(e)
@@ -178,15 +170,13 @@ async def logout(email: str):
         )
         
         if user is not None:
-            db_instance = db_service()
-            await db_instance.remove(f"users:{user.uid}")
+            db.reference(f"users/{user.uid}").delete()
             return {"status": "success"}
             
         raise HTTPException(status_code=status.HTTP_401, detail="User not found")
 
     except Exception as e:
-        db_instance = db_service()
-        await db_instance.remove(f"users:{user.uid}")  # Clean up if error occurs
+        db.reference(f"users/{user.uid}").delete()
         raise HTTPException(
             status_code=status.HTTP_500,
             detail=str(e)
@@ -306,5 +296,37 @@ async def register_device(request: Request):
         # Register the device token
         auth.set_token_manager(device_token)
         return {"status": "Device token registered"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# Get user settings
+@router.get("/api/users/{user_id}/settings")
+async def get_user_settings(user_id: str):
+    try:
+        ref = get_db_reference(user_id)
+        settings = ref.get()
+        if settings is None:
+            raise HTTPException(status_code=404, detail="Settings not found")
+        return settings
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Update user settings
+@router.put("/api/users/{user_id}/settings")
+async def update_user_settings(user_id: str, settings: UserSettings):
+    try:
+        ref = get_db_reference(user_id)
+        ref.update(settings.dict())
+        return {"message": "Settings updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Update user language preference
+@router.put("/api/users/{user_id}/language")
+async def update_language_preference(user_id: str, language: Language):
+    try:
+        ref = get_db_reference(user_id, "settings/language")
+        ref.set(language.language)
+        return {"message": "Language preference updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

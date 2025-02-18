@@ -17,7 +17,7 @@ from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
-@router.post("/create-inventory-item")
+@router.post("/api/inventory/items")
 def create_inventory_item(name, category, quantity, storage, description, price, item_id=None, rating=0.0, item_status="in stock"):
     try:
         storage_collection = db.collection(storage)  # Use storage as collection name
@@ -51,7 +51,7 @@ def create_inventory_item(name, category, quantity, storage, description, price,
         raise HTTPException(status_code=500, detail=str(e))
 
 # Function to retrieve all items from the inventory based on storage type.
-@router.get("/inventory/<storage>")
+@router.get("/api/inventory/{storage}")
 def get_items1(storage):
     try:
         storage_collection = db.collection(storage)  # Use storage type as collection name
@@ -64,7 +64,7 @@ def get_items1(storage):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Function to retrieve all items from the inventory.
-@router.get("/inventory")
+@router.get("/api/inventory")
 def get_items():
     try:
         self_stored_collection = db.collection("self_stored")
@@ -80,11 +80,25 @@ def get_items():
         return all_items
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/api/inventory/{storage}/{itemId}")
+def get_item(storage: str, item_id: str):
+    try:
+        storage_collection = db.collection(storage)
+        doc_ref = storage_collection.document(item_id)
+        doc = doc_ref.get()
+        if doc.exists:
+            return doc.to_dict()
+        else:
+            raise HTTPException(status_code=404, detail="Item not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # Example usage:
 # create_inventory_item("Apples", "fruits", 10, "self", "Fresh, red apples", 20)
-@router.delete("/inventory/<storage>/<item_id>")
-def delete_item(storage, item_id):
+@router.delete("/api/inventory/{storage}/{item_id}")
+def delete_item(storage: str, item_id: str):
     try:
         storage_collection = db.collection(storage)
         doc_ref = storage_collection.document(item_id)
@@ -93,7 +107,7 @@ def delete_item(storage, item_id):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.put("/inventory/<storage>/<item_id>")
+@router.put("/api/inventory/{storage}/{item_id}")
 def update_item(storage, item_id, name: Optional[str] = None, category: Optional[str] = None, quantity: Optional[int] = None, description: Optional[str] = None, price: Optional[float] = None):
     try:
         storage_collection = db.collection(storage)
@@ -115,5 +129,88 @@ def update_item(storage, item_id, name: Optional[str] = None, category: Optional
 
         doc_ref.update(data)
         return {"status": "success", "message": "Item updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+# GET /api/inventory/categories
+@router.get("/api/inventory/{storage}/{category}")
+def get_categories(storage, category, **kwargs):
+    try:
+        categories = set()
+        for cat in category.split(','):  # Split the comma-separated values to handle multiple categories
+            docs = db.collection(storage).where('category', '==', cat).get()
+            for doc in docs:
+                categories.add(doc.to_dict().get("category"))
+        return list(categories)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# GET /api/inventory/search
+@router.get("/api/inventory/search")
+def search_inventory(
+    category: Optional[str] = None,
+    keyword: Optional[str] = None,
+    location: Optional[str] = None,
+    storage_type: Optional[str] = None
+):
+    try:
+        collections = ["self_stored", "externally_stored"] if not storage_type else [storage_type]
+        results = []
+        
+        for collection in collections:
+            docs = db.collection(collection).get()
+            for doc in docs:
+                item = doc.to_dict()
+                if (not category or item.get("category") == category) and \
+                   (not keyword or keyword.lower() in item.get("name", "").lower()) and \
+                   (not location or item.get("location") == location):
+                    results.append(item)
+        
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# GET /api/inventory/history
+@router.get("/api/inventory/history")
+def get_inventory_history(storage_type: Optional[str] = None):
+    try:
+        collections = ["self_stored", "externally_stored"] if not storage_type else [storage_type]
+        history = []
+        
+        for collection in collections:
+            docs = db.collection(f"{collection}_history").get()
+            history.extend(doc.to_dict() for doc in docs)
+        
+        return history
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# POST /api/inventory/items/{itemId}/upload-image
+@router.post("/api/inventory/{storage}/{itemId}/upload-image")
+def upload_item_image(storage: str, itemId: str, file: UploadFile = File(...)):
+    try:
+        file_location = f"uploaded_images/{itemId}_{file.filename}"
+        os.makedirs(os.path.dirname(file_location), exist_ok=True)
+        
+        with open(file_location, "wb") as buffer:
+            buffer.write(file.file.read())
+        
+        db.collection("storage").document(itemId).update({"image_url": file_location})
+        
+        return {"status": "success", "message": "Image uploaded successfully", "file_path": file_location}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# GET /api/inventory/analytics
+@router.get("/api/inventory/analytics")
+def get_inventory_analytics():
+    try:
+        analytics = {}
+        for storage_type in ["self_stored", "externally_stored"]:
+            docs = db.collection(storage_type).get()
+            analytics[storage_type] = len(docs)
+            # implement logic for analytics aka charts to represent storage distribution
+        return analytics
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

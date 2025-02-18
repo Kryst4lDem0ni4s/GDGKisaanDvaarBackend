@@ -1,5 +1,5 @@
 from firebase_admin import credentials, initialize_app, auth
-from fastapi import UploadFile, File, requests
+from fastapi import Request, UploadFile, File, requests
 import firebase_admin._user_identifier
 import firebase_admin.auth
 import firebase_admin.instance_id
@@ -16,9 +16,8 @@ from app.utils import utils
 from firebase_admin import db
 from app.models.model_types import UserInDB, UserCreate
 import firebase_admin
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request, HTTPException
 import firebase_admin
-from fastapi import APIRouter, HTTPException
 import dotenv 
 import smtplib  # For sending reset emails (Note: You might need to install this library)
 from app.controllers.auth import UserAuth, AuthService
@@ -220,9 +219,14 @@ async def update_password(request: UpdatePasswordRequest):
 
 @router.post("/build-profile")
 async def build_new_profile(build_profile_request: modelType.ProfileData):
+    
+    # Fetch UID from Firebase using email
+    user_uid = UserAuth.get_user(build_profile_request.email)
+        
     try:
         # Create a new user profile
         user_profile = auth.UserInfo(
+            uid = user_uid,
             email = build_profile_request.email,
             first_name = build_profile_request.first_name,
             last_name = build_profile_request.last_name,
@@ -238,6 +242,28 @@ async def build_new_profile(build_profile_request: modelType.ProfileData):
             description = build_profile_request.description
         )
         
+        # user_profile = ProfileData(
+        #     uid = user_uid,
+        #     email = build_profile_request.email,
+        #     first_name = build_profile_request.first_name,
+        #     last_name = build_profile_request.last_name,
+        #     gender = build_profile_request.gender,
+        #     age = build_profile_request.age,
+        #     phone_number = build_profile_request.phone_number,
+        #     occupation = build_profile_request.occupation,
+        #     address = build_profile_request.address,
+        #     state = build_profile_request.state,
+        #     city = build_profile_request.city,
+        #     pincode = build_profile_request.pincode,
+        #     profile_image = build_profile_request.profile_image,
+        #     description = build_profile_request.description
+        # )
+        
+        # Store profile in Firebase Database
+        ref = db_service.reference(f"users/{user_uid}")
+        ref.set(user_profile)
+
+        # return {"message": "Profile created successfully", "uid": user.uid}
         print('Successfully created new user profile:', user_profile)
 
         # user = auth.get_user
@@ -254,4 +280,31 @@ async def build_new_profile(build_profile_request: modelType.ProfileData):
 async def active_user_session():
     return AuthService.get_active_user_session_info()
     
+@router.get("/api/auth/verify-email")
+async def verify_email(token: str):
+    try:
+        decoded_token = auth.verify_id_token(token)
+        email = decoded_token['email']
+        # Here you can add logic to update your database or perform other actions upon successful verification
+        return {"status": "Email verified", "user": email}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token")
     
+@router.post("/api/auth/device")
+async def register_device(request: Request):
+    data = await request.json()
+    device_token = data.get("device_token")
+    if not device_token:
+        raise HTTPException(status_code=400, detail="Device token is required")
+    
+    try:
+        # Register the device token with Firebase Auth
+        user = auth.get_current_user()  # Assuming you have an active session or can retrieve a valid user
+        if not user:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        
+        # Register the device token
+        auth.set_token_manager(device_token)
+        return {"status": "Device token registered"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

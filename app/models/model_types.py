@@ -1,5 +1,5 @@
 from fastapi import UploadFile
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 from pydantic import BaseModel, EmailStr, constr, Field
 from typing import *
 
@@ -13,7 +13,7 @@ class Query(BaseModel):
 class SignUpRequest(BaseModel):
     email: str
     username: str
-    password: constr(min_length=8)
+    password: str
     phonenumber: str = Field(..., pattern=r'^\+91\d{10}$')
 
 class LoginRequest(BaseModel):
@@ -28,10 +28,9 @@ class LoginRequest(BaseModel):
 #     email: str
 #     city: str
 #     pincode:str = Field(..., pattern=r'^\d{6}$')
-    
 class ProfileData(BaseModel):
     def __init__(self, uid, email, first_name, last_name, gender, age, phone_number, occupation, role, address, state, city, pincode, profile_image, description):
-        # self.uid = user.uid
+        self.uid = uid
         self.email = email
         self.first_name = first_name
         self.profile_image = last_name

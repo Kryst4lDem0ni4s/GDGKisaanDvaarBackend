@@ -35,10 +35,7 @@ initialize_app(cred, {"databaseURL": os.getenv("DATABASE_URL")})
 router = APIRouter()
 
 auth_service = auth
-db_service = db
-
-def get_db_reference(user_id: str, path: str = "settings"):
-    return db.reference(f"users/{user_id}/{path}")   
+db_service = db 
     
 @router.post("/sync")
 async def sync_data(data: List[Dict[str, Any]]):
@@ -232,23 +229,6 @@ async def build_new_profile(build_profile_request: modelType.ProfileData):
             description = build_profile_request.description
         )
         
-        # user_profile = ProfileData(
-        #     uid = user_uid,
-        #     email = build_profile_request.email,
-        #     first_name = build_profile_request.first_name,
-        #     last_name = build_profile_request.last_name,
-        #     gender = build_profile_request.gender,
-        #     age = build_profile_request.age,
-        #     phone_number = build_profile_request.phone_number,
-        #     occupation = build_profile_request.occupation,
-        #     address = build_profile_request.address,
-        #     state = build_profile_request.state,
-        #     city = build_profile_request.city,
-        #     pincode = build_profile_request.pincode,
-        #     profile_image = build_profile_request.profile_image,
-        #     description = build_profile_request.description
-        # )
-        
         # Store profile in Firebase Database
         ref = db_service.reference(f"users/{user_uid}")
         ref.set(user_profile)
@@ -289,7 +269,7 @@ async def register_device(request: Request):
     
     try:
         # Register the device token with Firebase Auth
-        user = auth.get_current_user()  # Assuming you have an active session or can retrieve a valid user
+        user = UserAuth.get_current_user()  # Assuming you have an active session or can retrieve a valid user
         if not user:
             raise HTTPException(status_code=401, detail="Unauthorized")
         
@@ -303,7 +283,7 @@ async def register_device(request: Request):
 @router.get("/api/users/{user_id}/settings")
 async def get_user_settings(user_id: str):
     try:
-        ref = get_db_reference(user_id)
+        ref = AuthService.get_db_reference(user_id)
         settings = ref.get()
         if settings is None:
             raise HTTPException(status_code=404, detail="Settings not found")
@@ -315,7 +295,7 @@ async def get_user_settings(user_id: str):
 @router.put("/api/users/{user_id}/settings")
 async def update_user_settings(user_id: str, settings: UserSettings):
     try:
-        ref = get_db_reference(user_id)
+        ref = AuthService.get_db_reference(user_id)
         ref.update(settings.dict())
         return {"message": "Settings updated successfully"}
     except Exception as e:
@@ -325,7 +305,7 @@ async def update_user_settings(user_id: str, settings: UserSettings):
 @router.put("/api/users/{user_id}/language")
 async def update_language_preference(user_id: str, language: Language):
     try:
-        ref = get_db_reference(user_id, "settings/language")
+        ref = AuthService.get_db_reference(user_id, "settings/language")
         ref.set(language.language)
         return {"message": "Language preference updated successfully"}
     except Exception as e:

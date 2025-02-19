@@ -68,3 +68,25 @@ class CropData(BaseModel):
     cropname: str
     quantity: int
     qualitygrade: str
+    
+# Order model
+class Order(BaseModel):
+    farmerId: str
+    buyerId: str
+    product: str
+    quantity: int
+    price: float
+    status: str = "Pending"
+
+# Order status update model
+class OrderStatusUpdate(BaseModel):
+    status: str
+    
+# Model for Order Cancellation
+class OrderCancellation(BaseModel):
+    reason: str
+
+# Model for Order Feedback
+class OrderFeedback(BaseModel):
+    rating: int  # 1 to 5
+    comment: str

@@ -1,8 +1,8 @@
-from fastapi import HTTPException, status, FastAPI
+from fastapi import HTTPException, dependencies, status, FastAPI
 import smtplib  # For sending reset emails (Note: You might need to install this library)
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from firebase_admin import db as db_service
+from firebase_admin import db
 from firebase_admin import auth
 import firebase_admin
 from models.model_types import ProfileData
@@ -38,9 +38,19 @@ class UserAuth:
         except Exception as e:
             raise HTTPException(status_code=404, detail="User not found")
 
-
+    @dependencies
+    def get_current_user(token: str):
+        try:
+            decoded_token = auth.verify_id_token(token)
+            return decoded_token
+        except Exception:
+            raise HTTPException(status_code=401, detail="Invalid authentication token")
 
 class AuthService:
+    
+    @staticmethod
+    def get_db_reference(user_id: str, path: str = "settings"):
+        return db.reference(f"users/{user_id}/{path}")  
     
     @staticmethod
     def generate_reset_token(email: str):
@@ -100,7 +110,7 @@ class AuthService:
                 "reset_url": f"https://localhost{user.uid}/password/reset?email={email}"
             }
         except Exception as e:
-            db_instance = db_service()
+            db_instance = db()
             await db_instance.remove(f"users:{user.uid}")  # Clean up if error occurs
             raise HTTPException(
                 status_code=status.HTTP_403,

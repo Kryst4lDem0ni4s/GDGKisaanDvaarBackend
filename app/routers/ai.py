@@ -6,6 +6,12 @@ from config import db
 import io
 from typing import Optional, List
 import uuid
+import os
+import logging
+from flask import Flask, request, jsonify
+from google.cloud import vision, storage, firestore
+import requests
+import binascii
 
 router = APIRouter()
 
@@ -542,5 +548,470 @@ async def get_transport_route_status(routeId: str, user=Depends(get_current_user
         if status_ref["user_id"] != user.uid:
             raise HTTPException(status_code=403, detail="Unauthorized access")
         return {"route_status": status_ref}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+def upload_to_storage(file, filename):
+    bucket = storage_client.bucket(BUCKET_NAME)
+    blob = bucket.blob(filename)
+    blob.upload_from_file(file)
+    return blob.public_url
+
+def analyze_image(image_content):
+    image = vision.Image(content=image_content)
+    response = vision_client.label_detection(image=image)
+    if response.error.message:
+        raise Exception(response.error.message)
+    return [label.description for label in response.label_annotations]
+
+# Remote Sensing Endpoints
+@router.post('/api/ai/remote-sensing', methods=['POST'])
+def trigger_remote_sensing():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image provided"}), 400
+    image_file = request.files['image']
+    image_content = image_file.read()
+    
+    # Generate unique task ID
+    task_id = binascii.hexlify(os.urandom(8)).decode('utf-8')
+    
+    # Upload to GCS
+    filename = f"remote-sensing/{task_id}.jpg"
+    image_url = upload_to_storage(image_file, filename)
+    
+    # Analyze with Vision API
+    try:
+        labels = analyze_image(image_content)
+        result = {"image_url": image_url, "labels": labels, "status": "completed"}
+    except Exception as e:
+        result = {"image_url": image_url, "error": str(e), "status": "failed"}
+    
+    # Store in Firestore
+    db.collection('remote_sensing_results').document(task_id).set(result)
+    return jsonify({"taskId": task_id}), 202
+
+@router.get('/api/ai/remote-sensing/results/<task_id>')
+def get_remote_sensing_results(task_id):
+    doc_ref = db.collection('remote_sensing_results').document(task_id).get()
+    if not doc_ref.exists:
+        return jsonify({"error": "Task not found"}), 404
+    return jsonify(doc_ref.to_dict()), 200
+
+# Weather Endpoint
+@router.get('/api/ai/weather')
+def get_weather():
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    if not lat or not lon:
+        return jsonify({"error": "Latitude and longitude required"}), 400
+    
+    url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={WEATHER_API_KEY}"
+    response = requests.get(url)
+    if response.status_code != 200:
+        return jsonify({"error": "Weather API error"}), 500
+    return jsonify(response.json()), 200
+
+# Crop Monitoring Endpoints
+@router.post('/api/ai/crop-monitoring')
+def trigger_crop_monitoring():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image provided"}), 400
+    image_file = request.files['image']
+    image_content = image_file.read()
+    
+    task_id = binascii.hexlify(os.urandom(8)).decode('utf-8')
+    filename = f"crop-monitoring/{task_id}.jpg"
+    image_url = upload_to_storage(image_file, filename)
+    
+    try:
+        labels = analyze_image(image_content)
+        health_status = "Healthy" if "Healthy" in labels else "Diseased"
+        result = {"image_url": image_url, "labels": labels, "status": health_status}
+    except Exception as e:
+        result = {"image_url": image_url, "error": str(e), "status": "failed"}
+    
+    db.collection('crop_monitoring_results').document(task_id).set(result)
+    return jsonify({"taskId": task_id}), 202
+
+@router.get('/api/ai/crop-monitoring/results/<task_id>')
+def get_crop_monitoring_results(task_id):
+    doc_ref = db.collection('crop_monitoring_results').document(task_id).get()
+    if not doc_ref.exists:
+        return jsonify({"error": "Task not found"}), 404
+    return jsonify(doc_ref.to_dict()), 200
+
+# Pest Detection Endpoints
+@router.post('/api/ai/pest-detection')
+def trigger_pest_detection():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image provided"}), 400
+    image_file = request.files['image']
+    image_content = image_file.read()
+    
+    task_id = binascii.hexlify(os.urandom(8)).decode('utf-8')
+    filename = f"pest-detection/{task_id}.jpg"
+    image_url = upload_to_storage(image_file, filename)
+    
+    try:
+        labels = analyze_image(image_content)
+        pest_detected = any(label in ["insect", "bug", "pest"] for label in labels)
+        result = {"image_url": image_url, "labels": labels, "pest_detected": pest_detected}
+    except Exception as e:
+        result = {"image_url": image_url, "error": str(e), "status": "failed"}
+    
+    db.collection('pest_detection_results').document(task_id).set(result)
+    return jsonify({"taskId": task_id}), 202
+
+@router.get('/api/ai/pest-detection/results/<task_id>')
+def get_pest_detection_results(task_id):
+    doc_ref = db.collection('pest_detection_results').document(task_id).get()
+    if not doc_ref.exists:
+        return jsonify({"error": "Task not found"}), 404
+    return jsonify(doc_ref.to_dict()), 200
+
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from google.cloud import storage
+from google.cloud import firestore
+import uuid
+import os
+
+router = APIRouter()
+
+# Initialize GCP clients
+storage_client = storage.Client()
+db = firestore.Client()
+
+# Define Firebase database collection
+ai_ref = db.collection("ai")
+
+@router.post("/api/ai/remote-sensing")
+async def trigger_remote_sensing_analysis(files: list[UploadFile] = File(...), user=Depends(get_current_user)):
+    """
+    Trigger remote sensing analysis by uploading geospatial data or images for processing.
+    """
+    try:
+        task_id = str(uuid.uuid4())
+        file_urls = []
+        
+        # Upload files to Google Cloud Storage
+        for file in files:
+            blob = storage_client.bucket("your-bucket-name").blob(f"remote-sensing/{task_id}/{file.filename}")
+            blob.upload_from_file(file.file)
+            file_urls.append(blob.public_url)
+
+        # Trigger remote sensing processing (use GCP AI/ML tools like Earth Engine or others)
+        # This could be a separate Cloud Function or an external service
+        processing_status = "Processing started"  # Simplified processing initiation
+
+        # Save task info to Firestore DB
+        ai_ref.document(task_id).set({
+            "user_id": user.uid,
+            "status": "processing",
+            "file_urls": file_urls,
+            "processing_status": processing_status
+        })
+
+        return {"message": "Remote sensing analysis initiated", "task_id": task_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/api/ai/remote-sensing/results/{taskId}")
+async def get_remote_sensing_results(taskId: str, user=Depends(get_current_user)):
+    """
+    Retrieve the result of remote sensing analysis.
+    """
+    try:
+        task_ref = ai_ref.document(taskId).get()
+        if not task_ref.exists:
+            raise HTTPException(status_code=404, detail="Remote sensing analysis not found")
+        
+        task_data = task_ref.to_dict()
+
+        # Check if user is authorized to access the task data
+        if task_data["user_id"] != user.uid:
+            raise HTTPException(status_code=403, detail="Unauthorized access")
+
+        # Check if processing is done
+        if task_data["status"] == "completed":
+            return {"status": task_data["status"], "file_urls": task_data["file_urls"]}
+        else:
+            return {"status": task_data["status"]}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+import requests
+
+@router.get("/api/ai/weather")
+async def get_weather_data(location: str):
+    """
+    Retrieve weather data for a given location.
+    """
+    try:
+        # Use a weather API (e.g., OpenWeather, GCP Weather API, etc.)
+        weather_api_key = os.getenv("WEATHER_API_KEY")
+        weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={weather_api_key}"
+        response = requests.get(weather_url)
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to fetch weather data")
+
+        weather_data = response.json()
+        return {
+            "location": location,
+            "temperature": weather_data["main"]["temp"],
+            "humidity": weather_data["main"]["humidity"],
+            "description": weather_data["weather"][0]["description"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi import APIRouter, HTTPException, Depends
+from google.cloud import firestore
+from datetime import datetime
+
+router = APIRouter()
+
+# Initialize Firestore client
+db = firestore.Client()
+
+# Reference to the AI requests collection
+ai_ref = db.collection("ai_requests")
+
+@router.get("/api/ai/history")
+async def get_ai_history(user=Depends(get_current_user)):
+    """
+    Retrieve history of AI analysis requests for the current user.
+    """
+    try:
+        # Fetch all AI request history
+        query = ai_ref.where("user_id", "==", user.uid).order_by("timestamp", direction=firestore.Query.DESCENDING)
+        results = query.stream()
+
+        history = []
+        for doc in results:
+            history.append(doc.to_dict())
+
+        if not history:
+            return {"message": "No AI analysis history found."}
+
+        return {"history": history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi import APIRouter, HTTPException, Depends
+from google.cloud import firestore
+from datetime import datetime
+import uuid
+
+router = APIRouter()
+
+# Firestore initialization
+db = firestore.Client()
+ai_ref = db.collection("ai_processing_queue")
+
+@router.post("/api/ai/queue")
+async def add_to_ai_queue(file_url: str, analysis_type: str, user=Depends(get_current_user)):
+    """
+    Add a request to an AI processing queue.
+    """
+    try:
+        task_id = str(uuid.uuid4())
+        queued_status = "queued"  # The job is in the queue waiting for processing
+
+        # Store the task details in the Firestore queue collection
+        ai_ref.document(task_id).set({
+            "user_id": user.uid,
+            "file_url": file_url,
+            "analysis_type": analysis_type,
+            "status": queued_status,
+            "timestamp": firestore.SERVER_TIMESTAMP
+        })
+
+        return {"message": "AI analysis job added to the queue", "task_id": task_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi import APIRouter, HTTPException, Depends
+import uuid
+from google.cloud import firestore
+from datetime import datetime
+
+router = APIRouter()
+
+# Firestore client
+db = firestore.Client()
+ai_ref = db.collection("ai_scheduled_tasks")
+
+@router.post("/api/ai/schedule")
+async def schedule_ai_task(task_type: str, schedule_time: str, user=Depends(get_current_user)):
+    """
+    Schedule periodic AI tasks.
+    """
+    try:
+        task_id = str(uuid.uuid4())
+
+        # Validate the schedule time format (assuming it is in ISO format)
+        try:
+            scheduled_time = datetime.fromisoformat(schedule_time)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid time format. Use ISO format.")
+
+        # Add the task details to Firestore for scheduling
+        ai_ref.document(task_id).set({
+            "user_id": user.uid,
+            "task_type": task_type,
+            "scheduled_time": scheduled_time,
+            "status": "scheduled",
+            "timestamp": firestore.SERVER_TIMESTAMP
+        })
+
+        # Logic for actual scheduling (e.g., using Cloud Scheduler to trigger an action at the specified time)
+        # This step will require setting up Google Cloud Scheduler or a similar service to trigger periodic tasks
+
+        return {"message": "AI task scheduled successfully", "task_id": task_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from google.cloud import storage, vision
+from google.cloud import firestore
+import uuid
+
+router = APIRouter()
+
+# Initialize GCP clients
+storage_client = storage.Client()
+vision_client = vision.ImageAnnotatorClient()
+db = firestore.Client()
+
+# Firestore reference for storing AI job metadata
+ai_ref = db.collection("ai_requests")
+
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from google.cloud import storage, vision
+from google.cloud import firestore
+import uuid
+
+router = APIRouter()
+
+# Initialize GCP clients
+storage_client = storage.Client()
+vision_client = vision.ImageAnnotatorClient()
+db = firestore.Client()
+
+# Firestore reference for storing AI job metadata
+ai_ref = db.collection("ai_requests")
+
+@router.post("/api/ai/process")
+async def process_ai_job(file: UploadFile = File(...), user=Depends(get_current_user)):
+    """
+    Process a new AI job immediately (e.g., image analysis via Google Cloud Vision).
+    """
+    try:
+        task_id = str(uuid.uuid4())
+        
+        # Upload the image to Google Cloud Storage
+        blob = storage_client.bucket("your-bucket-name").blob(f"ai/jobs/{task_id}/{file.filename}")
+        blob.upload_from_file(file.file)
+        file_url = blob.public_url
+        
+        # Perform image analysis using Google Cloud Vision API
+        image = vision.Image(source=vision.ImageSource(image_uri=file_url))
+        response = vision_client.label_detection(image=image)
+
+        # Save job metadata to Firestore
+        ai_ref.document(task_id).set({
+            "user_id": user.uid,
+            "file_url": file_url,
+            "status": "processing",
+            "labels": [label.description for label in response.label_annotations],
+            "timestamp": firestore.SERVER_TIMESTAMP
+        })
+        
+        return {"message": "AI job processing started", "task_id": task_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+   
+@router.get("/api/ai/results/{taskId}")
+async def get_ai_results(taskId: str, user=Depends(get_current_user)):
+    """
+    Retrieve the results of an AI task once completed.
+    """
+    try:
+        # Fetch the AI task results from Firestore
+        task_ref = ai_ref.document(taskId).get()
+        
+        if not task_ref.exists:
+            raise HTTPException(status_code=404, detail="AI task not found")
+        
+        task_data = task_ref.to_dict()
+
+        # Check if the user is authorized to view the results
+        if task_data["user_id"] != user.uid:
+            raise HTTPException(status_code=403, detail="Unauthorized access")
+
+        # Return the AI task results
+        return {
+            "task_id": taskId,
+            "status": task_data["status"],
+            "labels": task_data.get("labels", []),
+            "file_url": task_data["file_url"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/api/ai/model-stats")
+async def get_ai_model_stats():
+    """
+    Retrieve AI model performance statistics or metrics (e.g., accuracy, loss, etc.).
+    """
+    try:
+        # For simplicity, we'll simulate model stats retrieval.
+        # In a real-world case, you'd retrieve this from Vertex AI or another ML model tracking system.
+        model_stats = {
+            "accuracy": 0.85,  # Placeholder for model accuracy
+            "loss": 0.15,  # Placeholder for model loss
+            "timestamp": str(datetime.utcnow())
+        }
+
+        return {"model_stats": model_stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from pydantic import BaseModel
+
+class AIFeedback(BaseModel):
+    task_id: str
+    feedback: str  # User feedback about AI predictions
+    rating: int  # Rating of the AI prediction (e.g., 1-5)
+
+@router.post("/api/ai/feedback")
+async def submit_ai_feedback(feedback_data: AIFeedback, user=Depends(get_current_user)):
+    """
+    Submit feedback for AI predictions to improve model accuracy.
+    """
+    try:
+        # Fetch the AI task from Firestore
+        task_ref = ai_ref.document(feedback_data.task_id).get()
+        
+        if not task_ref.exists:
+            raise HTTPException(status_code=404, detail="AI task not found")
+        
+        task_data = task_ref.to_dict()
+
+        # Check if the user is authorized to provide feedback
+        if task_data["user_id"] != user.uid:
+            raise HTTPException(status_code=403, detail="Unauthorized access")
+        
+        # Save the feedback data to Firestore
+        feedback_ref = ai_ref.document(feedback_data.task_id).collection("feedbacks").add({
+            "feedback": feedback_data.feedback,
+            "rating": feedback_data.rating,
+            "timestamp": firestore.SERVER_TIMESTAMP
+        })
+
+        return {"message": "Feedback submitted successfully", "feedback_id": feedback_ref.id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

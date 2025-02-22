@@ -2,7 +2,6 @@ from fastapi import APIRouter
 import app.controllers.chatbot as controller
 import app.models.model_types as model_type
 
-
 router = APIRouter()
 
 @router.post("/chatbot")

@@ -1,9 +1,13 @@
+from fastapi import Depends, HTTPException
+from firebase_admin import auth
 import openai
 import os
 from app.models import model_types
 from langchain_community.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
+from firebase_admin import messaging
+
 
 # Fetch OpenAI API key from system environment variables
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -120,3 +124,36 @@ def price_recommend(data: model_types.CropData):
 
     response = chain.run({"dataset": dataset, "question": query})
     return response
+
+# Function to send push notifications via FCM
+def send_fcm_notification(token: str, title: str, body: str):
+    """
+    Send a real-time notification via Firebase Cloud Messaging.
+    """
+    try:
+        message = messaging.Message(
+            notification=messaging.Notification(title=title, body=body),
+            token=token,
+        )
+        response = messaging.send(message)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+def find_common_items(query_results1, query_results2):
+    """
+    Finds common items in two query results.
+    """
+    items1_set = set(query_results1)
+    items2_set = set(query_results2)
+    common_items_set = items1_set.intersection(items2_set)
+    return common_items_set
+
+# Dependency to verify if the user is an admin
+def get_admin_user(token: str = Depends(auth.verify_id_token)):
+    """
+    Verifies if the user is an admin by checking the Firebase custom claims.
+    """
+    if token.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Access forbidden: Admins only.")
+    return token

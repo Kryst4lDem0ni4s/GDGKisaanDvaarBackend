@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from google.cloud import translate_v2 as translate
-from pydantic import BaseModel
+from app.models.model_types import TranslationRequest
 
 router = APIRouter()
 

@@ -1,11 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
 from firebase_admin import firestore, auth, storage, messaging
 from google.cloud import vision, speech_v1p1beta1 as speech
+from app.models.model_types import NotificationRequest, NotificationSubscriptionRequest
 from config import db
-import io
-from typing import Optional, List
-import uuid
+from app.routers.ai import get_current_user
 
 router = APIRouter()
 
@@ -102,28 +100,6 @@ async def get_unread_notification_count(user=Depends(get_current_user)):
         return {"unread_count": unread_count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth, storage, messaging
-from google.cloud import vision, speech_v1p1beta1 as speech
-from config import db
-import io
-from typing import Optional, List
-import uuid
-
-router = APIRouter()
-
-# Google Cloud Services
-speech_client = speech.SpeechClient()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.get("/api/notifications")
 async def get_notifications(user=Depends(get_current_user)):

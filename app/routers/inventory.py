@@ -8,6 +8,8 @@ from typing import *
 import os
 import firebase_admin
 from fastapi import APIRouter, HTTPException
+from app.routers.ai import get_current_user
+
 
 # Initialize the Firebase Admin SDK with the downloaded service account key
 # cred = credentials.Certificate("D:/DdriveCodes/SIH/app/helpers/kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")

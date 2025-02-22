@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from google.cloud import firestore
 from typing import Dict
+from firebase_admin import auth
+from app.helpers.ai_helpers import get_admin_user
+from app.models.model_types import LogData
 
 router = APIRouter()
 
@@ -47,15 +50,6 @@ async def submit_logs(log: LogData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to submit log: {str(e)}")
 
-from fastapi import HTTPException
-from google.cloud import firestore
-from typing import List
-
-router = APIRouter()
-
-# Firestore client initialization
-db = firestore.Client()
-
 @router.get("/api/search")
 async def global_search(query: str):
     """
@@ -90,10 +84,6 @@ async def global_search(query: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to perform search: {str(e)}")
 
-from fastapi import APIRouter
-
-router = APIRouter()
-
 @router.get("/api/health")
 async def health_check():
     """
@@ -109,25 +99,6 @@ async def get_api_version():
     # Define the current API version
     api_version = "1.0.0"
     return {"version": api_version}
-
-from fastapi import APIRouter, HTTPException, Depends
-from firebase_admin import auth
-from google.cloud import firestore
-from typing import List
-
-router = APIRouter()
-
-# Firestore client initialization
-db = firestore.Client()
-
-# Dependency to verify if the user is an admin
-def get_admin_user(token: str = Depends(auth.verify_id_token)):
-    """
-    Verifies if the user is an admin by checking the Firebase custom claims.
-    """
-    if token.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Access forbidden: Admins only.")
-    return token
 
 @router.get("/api/admin/users")
 async def list_users(admin_token: dict = Depends(get_admin_user)):
@@ -147,11 +118,6 @@ async def list_users(admin_token: dict = Depends(get_admin_user)):
         return {"users": user_list}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve users: {str(e)}")
-
-from fastapi import APIRouter, HTTPException, Depends
-from firebase_admin import auth
-
-router = APIRouter()
 
 @router.put("/api/admin/users/{userId}/ban")
 async def ban_user(userId: str, admin_token: dict = Depends(get_admin_user)):
@@ -173,15 +139,6 @@ async def ban_user(userId: str, admin_token: dict = Depends(get_admin_user)):
         raise HTTPException(status_code=404, detail="User not found.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to ban user: {str(e)}")
-
-from google.cloud import firestore
-from fastapi import HTTPException, Query
-from typing import List
-
-router = APIRouter()
-
-# Firestore client initialization
-db = firestore.Client()
 
 @router.get("/api/admin/logs")
 async def get_system_logs(page: int = Query(1, le=100), limit: int = Query(10, le=100)):
@@ -226,28 +183,21 @@ async def get_feature_flags(admin_token: dict = Depends(get_admin_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch feature flags: {str(e)}")
 
-from fastapi_limiter import FastAPILimiter
-from fastapi import FastAPI
-
-app = FastAPI()
-
-# pip install fastapi-limiter
-
 # Initialize rate-limiting (using a backend like Redis)
-@app.on_event("startup")
-async def startup():
-    redis = await aioredis.create_redis_pool("redis://localhost")
-    FastAPILimiter.init(redis)
+# @router.on_event("startup")
+# async def startup():
+#     redis = await aioredis.create_redis_pool("redis://localhost")
+#     FastAPILimiter.init(redis)
 
-# Apply rate limiting to specific routes
-@router.get("/api/admin/users")
-@limiter.limit("5/minute")  # 5 requests per minute
-async def list_users(admin_token: dict = Depends(get_admin_user)):
-    # Endpoint logic...
-    pass
+# # Apply rate limiting to specific routes
+# @router.get("/api/admin/users")
+# @limiter.limit("5/minute")  # 5 requests per minute
+# async def list_users(admin_token: dict = Depends(get_admin_user)):
+#     # Endpoint logic...
+#     pass
 
-@router.get("/api/admin/logs")
-@limiter.limit("10/minute")  # 10 requests per minute
-async def get_logs():
-    # Endpoint logic...
-    pass
+# @router.get("/api/admin/logs")
+# @limiter.limit("10/minute")  # 10 requests per minute
+# async def get_logs():
+#     # Endpoint logic...
+#     pass

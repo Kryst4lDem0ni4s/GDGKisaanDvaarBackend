@@ -2,6 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from google.cloud import firestore
 from pydantic import BaseModel
 from typing import List
+from app.models.model_types import SyncAsset, SyncChatRequest, SyncConflictResolution, SyncInventoryRequest, SyncOrderRequest, UserSettingsSync
+from app.routers.ai import get_current_user
+import time
+import random
 
 router = APIRouter()
 
@@ -40,16 +44,6 @@ async def sync_inventory(sync_request: SyncInventoryRequest, user=Depends(get_cu
         return {"message": "Inventory sync successful."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to sync inventory: {str(e)}")
-
-class ChatMessageSyncItem(BaseModel):
-    conversation_id: str
-    message_id: str
-    sender_id: str
-    message: str
-    timestamp: str
-
-class SyncChatRequest(BaseModel):
-    messages: List[ChatMessageSyncItem]
 
 @router.post("/api/sync/chat")
 async def sync_chat(sync_request: SyncChatRequest, user=Depends(get_current_user)):
@@ -188,9 +182,6 @@ async def get_sync_status(user=Depends(get_current_user)):
         return {"status": status_data.get("status", "Syncing"), "last_synced": status_data.get("last_synced")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch sync status: {str(e)}")
-
-import time
-import random
 
 def retry_sync(sync_function, max_retries=5, delay=2):
     """

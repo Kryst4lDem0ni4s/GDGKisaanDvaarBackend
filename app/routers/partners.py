@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from google.cloud import firestore
 from typing import List
+from app.models.model_types import ColdStoragePartner, RetailPartner, UpdatePartnerDetails
+from app.routers.ai import get_current_user
 
 router = APIRouter()
 
@@ -25,9 +27,6 @@ async def get_retail_partners():
         return {"partners": partner_list}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve retail partners: {str(e)}")
-
-from pydantic import BaseModel
-
 
 @router.post("/api/partners/retail")
 async def add_retail_partner(partner: RetailPartner):
@@ -200,15 +199,6 @@ async def get_partner_reviews(partnerId: str):
         return {"reviews": review_list}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve partner reviews: {str(e)}")
-
-from fastapi import APIRouter, HTTPException
-from typing import List
-from google.cloud import firestore
-
-router = APIRouter()
-
-# Firestore client initialization
-db = firestore.Client()
 
 @router.get("/api/partners/search")
 async def search_partners(location: str = None, partner_type: str = None, min_rating: float = 0):

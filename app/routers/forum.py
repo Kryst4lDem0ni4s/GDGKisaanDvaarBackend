@@ -1,19 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
-from pydantic import BaseModel
 from firebase_admin import firestore, auth
+from app.models.model_types import BotQueryRequest, ForumCommentRequest, ForumThreadRequest, ModerateThreadRequest, ReportRequest, UpdateThreadRequest, VoteRequest
 from config import db
 import speech_recognition as sr
 import io
+from app.routers.ai import get_current_user
+
 
 router = APIRouter()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.post("/api/chat/bot")
 async def chatbot_query(request: BotQueryRequest, user=Depends(get_current_user)):
@@ -105,23 +99,6 @@ async def get_forum_thread(threadId: str):
         return thread_ref.to_dict()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
-from pydantic import BaseModel
-from firebase_admin import firestore, auth
-from config import db
-import speech_recognition as sr
-import io
-
-router = APIRouter()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.put("/api/forum/threads/{threadId}")
 async def update_forum_thread(threadId: str, request: UpdateThreadRequest, user=Depends(get_current_user)):

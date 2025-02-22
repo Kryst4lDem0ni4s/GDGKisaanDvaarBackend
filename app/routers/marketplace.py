@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
 from firebase_admin import firestore, auth, storage, messaging
 from google.cloud import vision, speech_v1p1beta1 as speech
+from app.helpers.ai_helpers import find_common_items
+from app.models.model_types import MarketplaceQueryRequest
 from config import db
 import io
 from typing import Optional, List
@@ -16,19 +17,8 @@ CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
 FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"
 FCM_URL = "https://fcm.googleapis.com/fcm/send"
 
-router = APIRouter()
-
 # Google Cloud Services
 speech_client = speech.SpeechClient()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
-
 
 router = APIRouter()
 
@@ -62,15 +52,6 @@ Multiple filters applied at the same time is also to be implemented.
 
 """
 
-def find_common_items(query_results1, query_results2):
-    """
-    Finds common items in two query results.
-    """
-    items1_set = set(query_results1)
-    items2_set = set(query_results2)
-    common_items_set = items1_set.intersection(items2_set)
-    return common_items_set
-
 @router.get("/marketplace")
 async def get_all_marketplace_items():
   """
@@ -100,8 +81,8 @@ async def get_marketplace_items_by_query(query):
 
     items = []
     for doc in query_results:
-        #item_data = dict(doc)
-        # item_data = doc.to_dict()
+        # item_data = dict(doc)
+        item_data = doc.to_dict()
         if item_data["item_status"] == "in stock":  # Filter in-stock items
             items.append(item_data)
 

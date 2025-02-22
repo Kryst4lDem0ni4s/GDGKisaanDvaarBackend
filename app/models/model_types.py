@@ -544,3 +544,19 @@ class AIFeedback(BaseModel):
 class CartItemRequest(BaseModel):
     item_id: str
     quantity: int
+    
+# Models for request bodies
+class Location(BaseModel):
+    latitude: float
+    longitude: float
+
+
+class ChatMessageSyncItem(BaseModel):
+    conversation_id: str
+    message_id: str
+    sender_id: str
+    message: str
+    timestamp: str
+
+class SyncChatRequest(BaseModel):
+    messages: List[ChatMessageSyncItem]

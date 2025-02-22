@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from google.cloud import firestore
 from typing import List
+from app.models.model_types import OnboardingTask, OnboardingTaskUpdate
+from app.routers.ai import get_current_user
 
 router = APIRouter()
 

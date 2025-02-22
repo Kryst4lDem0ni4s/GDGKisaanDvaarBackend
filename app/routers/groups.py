@@ -1,20 +1,14 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
 from firebase_admin import firestore, auth
+from app.models.model_types import GroupInviteRequest, GroupRequest, UpdateGroupRequest
 from config import db
 import speech_recognition as sr
 import io
 from typing import Optional, List
+from app.routers.ai import get_current_user
+
 
 router = APIRouter()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.get("/api/groups")
 async def get_groups():
@@ -72,23 +66,6 @@ async def update_group(groupId: str, request: UpdateGroupRequest, user=Depends(g
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth
-from config import db
-import speech_recognition as sr
-import io
-from typing import Optional, List
-
-router = APIRouter()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.get("/api/groups")
 async def get_groups():
@@ -194,24 +171,6 @@ async def add_group_member(groupId: str, member_id: str, user=Depends(get_curren
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth
-from config import db
-import speech_recognition as sr
-import io
-from typing import Optional, List
-
-router = APIRouter()
-
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.delete("/api/groups/{groupId}/members/{memberId}")
 async def remove_group_member(groupId: str, memberId: str, user=Depends(get_current_user)):

@@ -6,7 +6,7 @@ from uuid import uuid4
 import datetime
 import dotenv
 import os
-from controllers.auth import get_current_user
+from app.routers.ai import get_current_user
 from models.model_types import OrderCancellation, OrderFeedback, Order, OrderStatusUpdate
 
 # Initialize Firebase
@@ -69,14 +69,6 @@ async def update_order_status(orderId: str, status_update: OrderStatusUpdate, us
 
     order_ref.update({"status": status_update.status})
     return {"message": "Order status updated", "newStatus": status_update.status}
-
-# Dependency: Authenticate user
-def get_current_user(token: str):
-    try:
-        decoded_token = auth.verify_id_token(token)
-        return decoded_token
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid authentication token")
 
 # DELETE /api/orders/{orderId} - Delete an order
 @router.delete("/api/orders/{orderId}", response_model=dict)

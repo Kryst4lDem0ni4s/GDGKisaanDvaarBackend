@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
 from google.cloud import firestore
 import requests
 import os
+from firebase_admin import messaging
+from app.models.model_types import Location, LocationAlertSubscription, MovementTracking
+from app.routers.ai import get_current_user
 
 router = APIRouter()
 
@@ -11,11 +13,6 @@ db = firestore.Client()
 
 # Google Maps API key from environment variables
 google_maps_api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-
-# Models for request bodies
-class Location(BaseModel):
-    latitude: float
-    longitude: float
 
 # Helper function to search nearby places using Google Places API
 def search_nearby_places(location: Location, place_type: str):
@@ -81,30 +78,6 @@ async def get_geospatial_alerts(location: Location, user=Depends(get_current_use
             alert_data.append(alert_info)
 
         return {"alerts": alert_data}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-from fastapi import APIRouter, HTTPException, Depends
-from google.cloud import firestore
-from firebase_admin import messaging
-
-router = APIRouter()
-
-# Firestore initialization
-db = firestore.Client()
-
-# Function to send push notifications via FCM
-def send_fcm_notification(token: str, title: str, body: str):
-    """
-    Send a real-time notification via Firebase Cloud Messaging.
-    """
-    try:
-        message = messaging.Message(
-            notification=messaging.Notification(title=title, body=body),
-            token=token,
-        )
-        response = messaging.send(message)
-        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

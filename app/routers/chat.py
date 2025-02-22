@@ -3,17 +3,10 @@ from firebase_admin import firestore, auth
 from app.models.model_types import BotQueryRequest, NewConversationRequest, NewMessageRequest, UpdateConversationRequest
 from config import db
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+import speech_recognition as sr
+from app.routers.ai import get_current_user
 
 router = APIRouter()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
-
 
 @router.get("/api/chat/conversations")
 async def get_conversations(user_id: str, user=Depends(get_current_user)):

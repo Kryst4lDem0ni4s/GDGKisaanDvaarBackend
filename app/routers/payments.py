@@ -1,22 +1,15 @@
 from fastapi import APIRouter, HTTPException, Depends
+from app.models.model_types import IntegrationTokenRequest, PaymentConfirmation, PaymentRequest, RefundRequest
 import razorpay
 from pydantic import BaseModel
 from firebase_admin import auth
 from config import RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, db
+from app.routers.ai import get_current_user
 
 router = APIRouter()
 
 # Razorpay client
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 
 @router.post("/api/payments/initiate")
@@ -100,25 +93,6 @@ async def process_refund(request: RefundRequest, user=Depends(get_current_user))
         return {"refund_id": refund["id"], "status": "processed"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-from fastapi import APIRouter, HTTPException, Depends
-import razorpay
-from pydantic import BaseModel
-from firebase_admin import auth
-from config import RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, db
-
-router = APIRouter()
-
-# Razorpay client
-razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 
 @router.get("/api/payments/history")

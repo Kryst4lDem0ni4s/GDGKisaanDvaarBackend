@@ -5,6 +5,8 @@ from firebase_admin import credentials, firestore
 from google.cloud import firestore as gcp_firestore
 import aioredis
 from fastapi_limiter import FastAPILimiter
+from app.routers.ai import get_current_user
+
 
 # FastAPILimiter.init_redis()
 # FastAPILimiter.init_app(app)
@@ -139,10 +141,10 @@ async def get_sales_report(page: int = 1, limit: int = 10):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch sales data: {str(e)}")
 
-@router.on_event("startup")
-async def startup():
-    redis = await aioredis.create_redis_pool("redis://localhost")
-    FastAPILimiter.init(redis)
+# @router.on_event("startup")
+# async def startup():
+#     redis = await aioredis.create_redis_pool("redis://localhost")
+#     FastAPILimiter.init(redis)
 
 @router.get("/api/analytics/users", dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def get_user_engagement():

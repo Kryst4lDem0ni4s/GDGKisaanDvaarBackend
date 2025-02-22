@@ -22,7 +22,6 @@ import firebase_admin
 import smtplib  # For sending reset emails (Note: You might need to install this library)
 from app.controllers.auth import UserAuth, AuthService
 
-
 dotenv.load_dotenv()
 CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
 cred = credentials.Certificate(CREDENTIALS_FILE)

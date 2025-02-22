@@ -22,6 +22,8 @@ from config import db
 import io
 from typing import Optional, List
 import uuid
+from app.routers.ai import get_current_user
+
 
 router = APIRouter()
 

@@ -9,7 +9,7 @@ from typing import Optional, List
 import uuid
 import os
 import dotenv
-
+from app.routers.ai import get_current_user
 
 """
 User Cart (in Database):
@@ -48,15 +48,6 @@ router = APIRouter()
 
 # Google Cloud Services
 speech_client = speech.SpeechClient()
-
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.post("/cart/add")
 async def add_to_cart(request: CartItemRequest, user=Depends(get_current_user)):

@@ -533,3 +533,9 @@ class LogData(BaseModel):
     message: str
     timestamp: str
     metadata: Dict[str, str] = {}  # Additional data
+
+
+class AIFeedback(BaseModel):
+    task_id: str
+    feedback: str  # User feedback about AI predictions
+    rating: int  # Rating of the AI prediction (e.g., 1-5)

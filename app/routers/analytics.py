@@ -1,5 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from google.cloud import firestore
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi_limiter.depends import RateLimiter
+import firebase_admin
+from firebase_admin import credentials, firestore
+from google.cloud import firestore as gcp_firestore
+import aioredis
 
 router = APIRouter()
 
@@ -131,19 +135,39 @@ async def get_sales_report(page: int = 1, limit: int = 10):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch sales data: {str(e)}")
 
-from fastapi_limiter import FastAPILimiter
-from fastapi import FastAPI
-import aioredis
-
-app = FastAPI()
-
-@app.on_event("startup")
+@router.on_event("startup")
 async def startup():
     redis = await aioredis.create_redis_pool("redis://localhost")
     FastAPILimiter.init(redis)
 
-@router.get("/api/analytics/users")
-@limiter.limit("5/minute")  # 5 requests per minute
+@router.get("/api/analytics/users", dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def get_user_engagement():
-    # Endpoint logic...
-    pass
+    """
+    Retrieve user engagement metrics, such as active users, login frequency, etc.
+    """
+    try:
+        # Get the user collection
+        users_ref = db.collection("users")
+        users = users_ref.stream()
+
+        total_users = 0
+        active_users = 0
+        inactive_users = 0
+
+        for user in users:
+            user_data = user.to_dict()
+            total_users += 1
+            # Assuming there's an "active" field to track user engagement
+            if user_data.get("active"):
+                active_users += 1
+            else:
+                inactive_users += 1
+
+        return {
+            "total_users": total_users,
+            "active_users": active_users,
+            "inactive_users": inactive_users
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch user engagement data: {str(e)}")
+

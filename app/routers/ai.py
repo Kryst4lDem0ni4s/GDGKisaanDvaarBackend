@@ -7,15 +7,32 @@ from firebase_admin import firestore, auth, storage
 from google.cloud import vision
 from typing import Optional, List
 import uuid
+from app.models.model_types import AIFeedback, AudioFeedbackRequest, MarketForecastRequest, ModelFeedbackRequest, ResourceOptimizationRequest, TransportRouteRequest, TrendAnalysisRequest
 from flask import Flask, request, jsonify
 from google.cloud import vision, storage, firestore
 import requests
 import binascii
+from datetime import datetime
+import uuid
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
+from pydantic import BaseModel
+from firebase_admin import firestore, auth, storage
+from google.cloud import vision, speech_v1p1beta1 as speech
+from config import db
+import io
+from typing import Optional, List
+import uuid
 
 router = APIRouter()
 
-# Google Cloud Vision client
+# Google Cloud Services
+speech_client = speech.SpeechClient()
+storage_client = storage.Client()
 vision_client = vision.ImageAnnotatorClient()
+
+# Firestore initialization
+db = firestore.Client()
+ai_ref = db.collection("ai")
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
@@ -24,6 +41,19 @@ def get_current_user(user_id: str):
         return user
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
+    
+def upload_to_storage(file, filename):
+    bucket = storage_client.bucket(BUCKET_NAME)
+    blob = bucket.blob(filename)
+    blob.upload_from_file(file)
+    return blob.public_url
+
+def analyze_image(image_content):
+    image = vision.Image(content=image_content)
+    response = vision_client.label_detection(image=image)
+    if response.error.message:
+        raise Exception(response.error.message)
+    return [label.description for label in response.label_annotations]
 
 @router.post("/api/ai/crop-monitoring")
 async def upload_crop_images(files: List[UploadFile] = File(...), user=Depends(get_current_user)):
@@ -88,28 +118,6 @@ async def upload_pest_detection_images(files: List[UploadFile] = File(...), user
         return {"message": "Images uploaded successfully", "detection_id": detection_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth, storage
-from google.cloud import vision
-from config import db
-import io
-from typing import Optional, List
-import uuid
-
-router = APIRouter()
-
-# Google Cloud Vision client
-vision_client = vision.ImageAnnotatorClient()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.post("/api/ai/crop-monitoring")
 async def upload_crop_images(files: List[UploadFile] = File(...), user=Depends(get_current_user)):
@@ -217,28 +225,6 @@ async def get_model_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth, storage
-from google.cloud import vision, speech_v1p1beta1 as speech
-from config import db
-import io
-from typing import Optional, List
-import uuid
-
-router = APIRouter()
-
-# Google Cloud Speech client
-speech_client = speech.SpeechClient()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
-
 @router.post("/api/ai/audio")
 async def process_audio(files: List[UploadFile] = File(...), user=Depends(get_current_user)):
     """
@@ -311,28 +297,6 @@ async def submit_audio_feedback(request: AudioFeedbackRequest, user=Depends(get_
         return {"message": "Feedback submitted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth, storage
-from google.cloud import vision, speech_v1p1beta1 as speech
-from config import db
-import io
-from typing import Optional, List
-import uuid
-
-router = APIRouter()
-
-# Google Cloud Services
-speech_client = speech.SpeechClient()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.get("/api/ai/market-prices")
 async def get_market_prices(location: str, commodity: str, user=Depends(get_current_user)):
@@ -410,28 +374,6 @@ async def get_trend_predictions(category: str, user=Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth, storage
-from google.cloud import vision, speech_v1p1beta1 as speech
-from config import db
-import io
-from typing import Optional, List
-import uuid
-
-router = APIRouter()
-
-# Google Cloud Services
-speech_client = speech.SpeechClient()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
-
 @router.get("/api/ai/resource-optimization")
 async def get_resource_optimization(request: ResourceOptimizationRequest, user=Depends(get_current_user)):
     """
@@ -498,19 +440,6 @@ async def get_transport_route_status(routeId: str, user=Depends(get_current_user
         return {"route_status": status_ref}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-def upload_to_storage(file, filename):
-    bucket = storage_client.bucket(BUCKET_NAME)
-    blob = bucket.blob(filename)
-    blob.upload_from_file(file)
-    return blob.public_url
-
-def analyze_image(image_content):
-    image = vision.Image(content=image_content)
-    response = vision_client.label_detection(image=image)
-    if response.error.message:
-        raise Exception(response.error.message)
-    return [label.description for label in response.label_annotations]
 
 # Remote Sensing Endpoints
 @router.post('/api/ai/remote-sensing', methods=['POST'])
@@ -617,20 +546,6 @@ def get_pest_detection_results(task_id):
         return jsonify({"error": "Task not found"}), 404
     return jsonify(doc_ref.to_dict()), 200
 
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
-from google.cloud import storage
-from google.cloud import firestore
-import uuid
-import os
-
-router = APIRouter()
-
-# Initialize GCP clients
-storage_client = storage.Client()
-db = firestore.Client()
-
-# Define Firebase database collection
-ai_ref = db.collection("ai")
 
 @router.post("/api/ai/remote-sensing")
 async def trigger_remote_sensing_analysis(files: list[UploadFile] = File(...), user=Depends(get_current_user)):
@@ -688,8 +603,6 @@ async def get_remote_sensing_results(taskId: str, user=Depends(get_current_user)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-import requests
-
 @router.get("/api/ai/weather")
 async def get_weather_data(location: str):
     """
@@ -714,18 +627,6 @@ async def get_weather_data(location: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from fastapi import APIRouter, HTTPException, Depends
-from google.cloud import firestore
-from datetime import datetime
-
-router = APIRouter()
-
-# Initialize Firestore client
-db = firestore.Client()
-
-# Reference to the AI requests collection
-ai_ref = db.collection("ai_requests")
-
 @router.get("/api/ai/history")
 async def get_ai_history(user=Depends(get_current_user)):
     """
@@ -746,17 +647,6 @@ async def get_ai_history(user=Depends(get_current_user)):
         return {"history": history}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-from fastapi import APIRouter, HTTPException, Depends
-from google.cloud import firestore
-from datetime import datetime
-import uuid
-
-router = APIRouter()
-
-# Firestore initialization
-db = firestore.Client()
-ai_ref = db.collection("ai_processing_queue")
 
 @router.post("/api/ai/queue")
 async def add_to_ai_queue(file_url: str, analysis_type: str, user=Depends(get_current_user)):
@@ -780,16 +670,6 @@ async def add_to_ai_queue(file_url: str, analysis_type: str, user=Depends(get_cu
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from fastapi import APIRouter, HTTPException, Depends
-import uuid
-from google.cloud import firestore
-from datetime import datetime
-
-router = APIRouter()
-
-# Firestore client
-db = firestore.Client()
-ai_ref = db.collection("ai_scheduled_tasks")
 
 @router.post("/api/ai/schedule")
 async def schedule_ai_task(task_type: str, schedule_time: str, user=Depends(get_current_user)):
@@ -821,35 +701,6 @@ async def schedule_ai_task(task_type: str, schedule_time: str, user=Depends(get_
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
-from google.cloud import storage, vision
-from google.cloud import firestore
-import uuid
-
-router = APIRouter()
-
-# Initialize GCP clients
-storage_client = storage.Client()
-vision_client = vision.ImageAnnotatorClient()
-db = firestore.Client()
-
-# Firestore reference for storing AI job metadata
-ai_ref = db.collection("ai_requests")
-
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
-from google.cloud import storage, vision
-from google.cloud import firestore
-import uuid
-
-router = APIRouter()
-
-# Initialize GCP clients
-storage_client = storage.Client()
-vision_client = vision.ImageAnnotatorClient()
-db = firestore.Client()
-
-# Firestore reference for storing AI job metadata
-ai_ref = db.collection("ai_requests")
 
 @router.post("/api/ai/process")
 async def process_ai_job(file: UploadFile = File(...), user=Depends(get_current_user)):
@@ -927,13 +778,6 @@ async def get_ai_model_stats():
         return {"model_stats": model_stats}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-from pydantic import BaseModel
-
-class AIFeedback(BaseModel):
-    task_id: str
-    feedback: str  # User feedback about AI predictions
-    rating: int  # Rating of the AI prediction (e.g., 1-5)
 
 @router.post("/api/ai/feedback")
 async def submit_ai_feedback(feedback_data: AIFeedback, user=Depends(get_current_user)):

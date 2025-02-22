@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+import io
 from firebase_admin import firestore, auth
+from app.models.model_types import BotQueryRequest, NewConversationRequest, NewMessageRequest, UpdateConversationRequest
 from config import db
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 
 router = APIRouter()
 
@@ -97,22 +98,6 @@ async def update_conversation(conversationId: str, request: UpdateConversationRe
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-from firebase_admin import firestore, auth
-from config import db
-
-router = APIRouter()
-
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.get("/api/chat/conversations")
 async def get_conversations(user_id: str, user=Depends(get_current_user)):
@@ -233,23 +218,6 @@ async def mark_messages_as_read(conversationId: str, user=Depends(get_current_us
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
-from pydantic import BaseModel
-from firebase_admin import firestore, auth
-from config import db
-import speech_recognition as sr
-import io
-
-router = APIRouter()
-
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.post("/api/chat/bot")
 async def chatbot_query(request: BotQueryRequest, user=Depends(get_current_user)):

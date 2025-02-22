@@ -539,3 +539,8 @@ class AIFeedback(BaseModel):
     task_id: str
     feedback: str  # User feedback about AI predictions
     rating: int  # Rating of the AI prediction (e.g., 1-5)
+
+
+class CartItemRequest(BaseModel):
+    item_id: str
+    quantity: int

@@ -4,6 +4,10 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud import firestore as gcp_firestore
 import aioredis
+from fastapi_limiter import FastAPILimiter
+
+# FastAPILimiter.init_redis()
+# FastAPILimiter.init_app(app)
 
 router = APIRouter()
 

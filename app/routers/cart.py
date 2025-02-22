@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
 from pydantic import BaseModel
 from firebase_admin import firestore, auth, storage, messaging
 from google.cloud import vision, speech_v1p1beta1 as speech
+from app.models.model_types import CartItemRequest
 from config import db
 import io
 from typing import Optional, List
@@ -48,9 +49,6 @@ router = APIRouter()
 # Google Cloud Services
 speech_client = speech.SpeechClient()
 
-class CartItemRequest(BaseModel):
-    item_id: str
-    quantity: int
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):

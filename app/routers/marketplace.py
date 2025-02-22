@@ -1,19 +1,34 @@
-from firebase_admin import credentials, initialize_app, auth, db
-from fastapi import UploadFile, File
-import app.models.model_types as modelType
-from app.helpers import ai_helpers
-from app.utils import utils
-import json
-from typing import *
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
+from pydantic import BaseModel
+from firebase_admin import firestore, auth, storage, messaging
+from google.cloud import vision, speech_v1p1beta1 as speech
+from config import db
+import io
+from typing import Optional, List
+import uuid
 import os
-import firebase_admin
-from fastapi import APIRouter, HTTPException
+import dotenv
+from geopy.distance import distance as geopy_distance
+from geopy.geocoders import Nominatim
 
-# Initialize the Firebase Admin SDK with the downloaded service account key
-# cred = credentials.Certificate("D:/DdriveCodes/SIH/app/helpers/kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
-# initialize_app(cred)
+dotenv.load_dotenv()
+CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
+FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"
+FCM_URL = "https://fcm.googleapis.com/fcm/send"
 
-#auth = auth()
+router = APIRouter()
+
+# Google Cloud Services
+speech_client = speech.SpeechClient()
+
+# Middleware for Firebase authentication
+def get_current_user(user_id: str):
+    try:
+        user = auth.get_user(user_id)
+        return user
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
+
 
 router = APIRouter()
 
@@ -43,7 +58,7 @@ TODO:
 Implement being able to specify a location's radius:
 eg. 100 km range from 201305 pincode
 TODO:
-Multiple filters applied at the same time is currently out of scope, implement later.
+Multiple filters applied at the same time is also to be implemented.
 
 """
 
@@ -250,3 +265,72 @@ async def get_marketplace_items_by_pincode_and_query(pincode, query):
             items.append(item_data)
 
     return items
+
+@router.post("/marketplace/query")
+async def query_marketplace(request: MarketplaceQueryRequest):
+    """
+    Retrieves marketplace items based on a complex query with multiple filters, sorting options, and location radius filtering.
+    """
+    try:
+        inventory_ref = db.reference("inventory")
+        query_results = inventory_ref.get() or []
+        items = list(query_results.values())
+
+        # Step 1: Apply Location Radius Filter First
+        if request.radius and request.pincode:
+
+            geolocator = Nominatim(user_agent="marketplace_locator")
+            location_ref = db.reference("locations").child(request.pincode).get()
+            if location_ref:
+                user_lat, user_lon = location_ref["lat"], location_ref["lon"]
+                filtered_items = []
+                for item in items:
+                    item_location = db.reference("locations").child(item["pincode"]).get()
+                    if item_location:
+                        item_lat, item_lon = item_location["lat"], item_location["lon"]
+                        user_coords = (user_lat, user_lon)
+                        item_coords = (item_lat, item_lon)
+                        distance = geopy_distance(user_coords, item_coords).km
+                        if distance <= request.radius:
+                            filtered_items.append(item)
+                items = filtered_items
+
+        # Step 2: Apply Category, Farm, and Pincode Filters
+        if request.category or request.farm or request.pincode:
+            items = [item for item in items if
+                     (not request.category or item.get("category") == request.category) and
+                     (not request.farm or item.get("farm") == request.farm) and
+                     (not request.pincode or item.get("pincode") == request.pincode)]
+
+        # Step 3: Apply Custom and Additional Filters
+        if request.filters:
+            for filter_key, filter_value in request.filters.items():
+                if filter_key == "min_price":
+                    items = [item for item in items if item["price"]["value"] >= filter_value]
+                elif filter_key == "max_price":
+                    items = [item for item in items if item["price"]["value"] <= filter_value]
+                elif filter_key == "min_quantity":
+                    items = [item for item in items if item["quantity"]["value"] >= filter_value]
+                elif filter_key == "max_quantity":
+                    items = [item for item in items if item["quantity"]["value"] <= filter_value]
+                elif filter_key == "rating_threshold":
+                    items = [item for item in items if item.get("average_rating", 0) >= filter_value]
+
+        # Step 4: Filter by Item Status
+        items = [item for item in items if item.get("item_status") == "in stock"]
+
+        # Step 5: Sorting
+        if request.sorted_by:
+            sort_key = {
+                "ratings": lambda x: x.get("average_rating", 0),
+                "price": lambda x: x.get("price", {}).get("value", 0),
+                "quantity": lambda x: x.get("quantity", {}).get("value", 0),
+            }.get(request.sorted_by)
+
+            if sort_key:
+                reverse = request.sorted_by == "ratings"
+                items.sort(key=sort_key, reverse=reverse)
+
+        return {"items": items}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

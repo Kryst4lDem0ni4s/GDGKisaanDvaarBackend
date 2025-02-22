@@ -12,20 +12,6 @@ router = APIRouter()
 # Google Cloud Services
 speech_client = speech.SpeechClient()
 
-class TraceabilityScanRequest(BaseModel):
-    code_type: str  # e.g., QR, Barcode
-    code_value: str
-
-class TraceabilityDocumentRequest(BaseModel):
-    product_id: str
-    document_type: str  # e.g., Invoice, Certificate
-    document_url: str
-
-class ReviewRequest(BaseModel):
-    product_id: str
-    rating: int  # 1 to 5
-    comment: Optional[str] = None
-    user_id: str
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
@@ -142,27 +128,6 @@ router = APIRouter()
 
 # Google Cloud Services
 speech_client = speech.SpeechClient()
-
-class TraceabilityScanRequest(BaseModel):
-    code_type: str  # e.g., QR, Barcode
-    code_value: str
-
-class TraceabilityDocumentRequest(BaseModel):
-    product_id: str
-    document_type: str  # e.g., Invoice, Certificate
-    document_url: str
-
-class ReviewRequest(BaseModel):
-    product_id: str
-    rating: int  # 1 to 5
-    comment: Optional[str] = None
-    user_id: str
-
-class ModerateReviewRequest(BaseModel):
-    review_id: str
-    action: str  # "approve", "reject", "flag"
-    reason: Optional[str] = None
-    moderator_id: str
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):

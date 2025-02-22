@@ -5,14 +5,6 @@ from config import db
 
 router = APIRouter()
 
-# Chat conversation models
-class NewConversationRequest(BaseModel):
-    participants: list[str]  # List of user IDs
-
-class UpdateConversationRequest(BaseModel):
-    archived: bool = False
-    metadata: dict = {}
-
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
     try:
@@ -113,17 +105,6 @@ from config import db
 
 router = APIRouter()
 
-# Chat conversation models
-class NewConversationRequest(BaseModel):
-    participants: list[str]  # List of user IDs
-
-class UpdateConversationRequest(BaseModel):
-    archived: bool = False
-    metadata: dict = {}
-
-class NewMessageRequest(BaseModel):
-    sender_id: str
-    content: str
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
@@ -261,20 +242,6 @@ import io
 
 router = APIRouter()
 
-# Chat conversation models
-class NewConversationRequest(BaseModel):
-    participants: list[str]  # List of user IDs
-
-class UpdateConversationRequest(BaseModel):
-    archived: bool = False
-    metadata: dict = {}
-
-class NewMessageRequest(BaseModel):
-    sender_id: str
-    content: str
-
-class BotQueryRequest(BaseModel):
-    query: str
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):

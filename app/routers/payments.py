@@ -9,23 +9,6 @@ router = APIRouter()
 # Razorpay client
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-# Payment request model
-class PaymentRequest(BaseModel):
-    amount: int  # Amount in paise (₹10 = 1000 paise)
-    currency: str = "INR"
-    receipt_id: str
-    user_id: str
-
-# Payment confirmation model
-class PaymentConfirmation(BaseModel):
-    payment_id: str
-    order_id: str
-    signature: str
-
-# Refund request model
-class RefundRequest(BaseModel):
-    payment_id: str
-    amount: int = None  # Partial or full refund
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
@@ -128,15 +111,6 @@ router = APIRouter()
 
 # Razorpay client
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-
-# Payment history request model
-class PaymentHistoryRequest(BaseModel):
-    user_id: str
-
-# Integration token model
-class IntegrationTokenRequest(BaseModel):
-    provider: str  # e.g., 'razorpay', 'stripe', 'paypal'
-    token: str
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):

@@ -12,12 +12,6 @@ router = APIRouter()
 # Google Cloud Services
 speech_client = speech.SpeechClient()
 
-class NotificationRequest(BaseModel):
-    title: str
-    body: str
-    user_id: str
-    type: Optional[str] = "general"
-
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
     try:
@@ -122,15 +116,6 @@ router = APIRouter()
 
 # Google Cloud Services
 speech_client = speech.SpeechClient()
-
-class NotificationRequest(BaseModel):
-    title: str
-    body: str
-    user_id: str
-    type: Optional[str] = "general"
-
-class NotificationSubscriptionRequest(BaseModel):
-    topic: str
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):

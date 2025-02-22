@@ -108,11 +108,6 @@ def send_fcm_notification(token: str, title: str, body: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class LocationAlertSubscription(BaseModel):
-    latitude: float
-    longitude: float
-    radius: int  # in meters
-    alert_type: str  # Weather, Market, etc.
 
 @router.post("/api/geospatial/alerts/subscribe")
 async def subscribe_to_alerts(subscription: LocationAlertSubscription, user=Depends(get_current_user)):
@@ -149,13 +144,6 @@ async def get_user_alert_preferences(user=Depends(get_current_user)):
         return {"preferences": user_alert.to_dict()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-class MovementTracking(BaseModel):
-    product_id: str
-    origin: str
-    destination: str
-    timestamp: str  # ISO format timestamp
-    status: str  # e.g., 'in transit', 'delivered'
 
 @router.post("/api/geospatial/movement")
 async def track_goods_movement(movement: MovementTracking, user=Depends(get_current_user)):

@@ -7,27 +7,6 @@ import io
 
 router = APIRouter()
 
-# Chat conversation models
-class NewConversationRequest(BaseModel):
-    participants: list[str]  # List of user IDs
-
-class UpdateConversationRequest(BaseModel):
-    archived: bool = False
-    metadata: dict = {}
-
-class NewMessageRequest(BaseModel):
-    sender_id: str
-    content: str
-
-class BotQueryRequest(BaseModel):
-    query: str
-
-class ForumThreadRequest(BaseModel):
-    title: str
-    content: str
-    category: str
-    created_by: str
-
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
     try:
@@ -136,36 +115,6 @@ import io
 
 router = APIRouter()
 
-# Chat conversation models
-class NewConversationRequest(BaseModel):
-    participants: list[str]  # List of user IDs
-
-class UpdateConversationRequest(BaseModel):
-    archived: bool = False
-    metadata: dict = {}
-
-class NewMessageRequest(BaseModel):
-    sender_id: str
-    content: str
-
-class BotQueryRequest(BaseModel):
-    query: str
-
-class ForumThreadRequest(BaseModel):
-    title: str
-    content: str
-    category: str
-    created_by: str
-
-class ForumCommentRequest(BaseModel):
-    content: str
-    created_by: str
-
-class UpdateThreadRequest(BaseModel):
-    title: str = None
-    content: str = None
-    category: str = None
-
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
     try:
@@ -240,48 +189,6 @@ import io
 from typing import Optional
 
 router = APIRouter()
-
-# Chat conversation models
-class NewConversationRequest(BaseModel):
-    participants: list[str]  # List of user IDs
-
-class UpdateConversationRequest(BaseModel):
-    archived: bool = False
-    metadata: dict = {}
-
-class NewMessageRequest(BaseModel):
-    sender_id: str
-    content: str
-
-class BotQueryRequest(BaseModel):
-    query: str
-
-class ForumThreadRequest(BaseModel):
-    title: str
-    content: str
-    category: str
-    created_by: str
-
-class ForumCommentRequest(BaseModel):
-    content: str
-    created_by: str
-
-class UpdateThreadRequest(BaseModel):
-    title: Optional[str] = None
-    content: Optional[str] = None
-    category: Optional[str] = None
-
-class VoteRequest(BaseModel):
-    vote: str  # "up" or "down"
-
-class ReportRequest(BaseModel):
-    reason: str
-    reported_by: str
-
-class ModerateThreadRequest(BaseModel):
-    action: str  # "lock", "unlock", "delete", "warn"
-    moderator_id: str
-    reason: Optional[str] = None
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):

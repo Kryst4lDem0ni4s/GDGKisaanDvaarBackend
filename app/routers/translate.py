@@ -7,10 +7,6 @@ router = APIRouter()
 # Initialize Google Translate client
 translate_client = translate.Client()
 
-class TranslationRequest(BaseModel):
-    text: str
-    target_language: str  # e.g., 'en', 'es', 'fr', etc.
-
 @router.post("/api/translate")
 async def translate_text(request: TranslationRequest):
     """

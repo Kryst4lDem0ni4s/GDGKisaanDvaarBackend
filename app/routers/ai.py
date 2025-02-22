@@ -1,13 +1,12 @@
+import io
+import os
+import logging
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
 from pydantic import BaseModel
 from firebase_admin import firestore, auth, storage
 from google.cloud import vision
-from config import db
-import io
 from typing import Optional, List
 import uuid
-import os
-import logging
 from flask import Flask, request, jsonify
 from google.cloud import vision, storage, firestore
 import requests
@@ -17,12 +16,6 @@ router = APIRouter()
 
 # Google Cloud Vision client
 vision_client = vision.ImageAnnotatorClient()
-
-class CropAnalysisRequest(BaseModel):
-    image_urls: List[str]  # Optional if uploading files directly
-
-class PestDetectionRequest(BaseModel):
-    image_urls: List[str]  # Optional if uploading files directly
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
@@ -109,16 +102,6 @@ router = APIRouter()
 
 # Google Cloud Vision client
 vision_client = vision.ImageAnnotatorClient()
-
-class CropAnalysisRequest(BaseModel):
-    image_urls: List[str]  # Optional if uploading files directly
-
-class PestDetectionRequest(BaseModel):
-    image_urls: List[str]  # Optional if uploading files directly
-
-class ModelFeedbackRequest(BaseModel):
-    analysis_id: str
-    feedback: str  # Positive, Negative, or Detailed Feedback
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
@@ -248,10 +231,6 @@ router = APIRouter()
 # Google Cloud Speech client
 speech_client = speech.SpeechClient()
 
-class AudioFeedbackRequest(BaseModel):
-    audio_id: str
-    feedback: str  # Positive, Negative, or Detailed Feedback
-
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
     try:
@@ -346,16 +325,6 @@ router = APIRouter()
 
 # Google Cloud Services
 speech_client = speech.SpeechClient()
-
-class MarketForecastRequest(BaseModel):
-    location: str
-    commodity: str
-    timeframe: str  # daily, weekly, monthly
-
-class TrendAnalysisRequest(BaseModel):
-    category: str
-    start_date: str
-    end_date: str
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):
@@ -454,27 +423,6 @@ router = APIRouter()
 
 # Google Cloud Services
 speech_client = speech.SpeechClient()
-
-class MarketForecastRequest(BaseModel):
-    location: str
-    commodity: str
-    timeframe: str  # daily, weekly, monthly
-
-class TrendAnalysisRequest(BaseModel):
-    category: str
-    start_date: str
-    end_date: str
-
-class ResourceOptimizationRequest(BaseModel):
-    resources: List[str]
-    constraints: Optional[dict] = None
-    optimization_goal: str  # e.g., minimize cost, maximize yield
-
-class TransportRouteRequest(BaseModel):
-    source: str
-    destination: str
-    stops: Optional[List[str]] = None
-    optimize_for: str  # e.g., shortest, fastest, cost-effective
 
 # Middleware for Firebase authentication
 def get_current_user(user_id: str):

@@ -8,18 +8,6 @@ router = APIRouter()
 # Firestore client initialization
 db = firestore.Client()
 
-class InventorySyncItem(BaseModel):
-    item_id: str
-    action: str  # 'add', 'edit', 'remove'
-    name: str
-    category: str
-    quantity: int
-    price: float
-    image_url: str = None  # Optional for edit/add actions
-
-class SyncInventoryRequest(BaseModel):
-    items: List[InventorySyncItem]
-
 @router.post("/api/sync/inventory")
 async def sync_inventory(sync_request: SyncInventoryRequest, user=Depends(get_current_user)):
     """
@@ -85,17 +73,6 @@ async def sync_chat(sync_request: SyncChatRequest, user=Depends(get_current_user
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to sync chat messages: {str(e)}")
 
-class OrderSyncItem(BaseModel):
-    order_id: str
-    action: str  # 'add', 'update', 'cancel'
-    order_status: str
-    items: List[dict]  # List of items in the order, can include product IDs, quantities, etc.
-    delivery_address: str = None
-    payment_status: str = None
-
-class SyncOrderRequest(BaseModel):
-    orders: List[OrderSyncItem]
-
 @router.post("/api/sync/orders")
 async def sync_orders(sync_request: SyncOrderRequest, user=Depends(get_current_user)):
     """
@@ -129,12 +106,6 @@ async def sync_orders(sync_request: SyncOrderRequest, user=Depends(get_current_u
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to sync orders: {str(e)}")
 
-class UserSettingsSync(BaseModel):
-    user_id: str
-    language: str  # e.g., "en", "es", "fr"
-    notifications_enabled: bool
-    theme: str  # e.g., "dark", "light"
-
 @router.post("/api/sync/settings")
 async def sync_user_settings(settings: UserSettingsSync, user=Depends(get_current_user)):
     """
@@ -153,13 +124,6 @@ async def sync_user_settings(settings: UserSettingsSync, user=Depends(get_curren
         return {"message": "User settings synced successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to sync user settings: {str(e)}")
-
-class SyncConflictResolution(BaseModel):
-    document_id: str
-    field_name: str
-    local_value: str
-    server_value: str
-    resolution_action: str  # 'overwrite', 'merge'
 
 @router.post("/api/sync/conflict")
 async def resolve_sync_conflict(conflict: SyncConflictResolution, user=Depends(get_current_user)):
@@ -188,10 +152,6 @@ async def resolve_sync_conflict(conflict: SyncConflictResolution, user=Depends(g
         return {"message": "Conflict resolved successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to resolve conflict: {str(e)}")
-
-class SyncAsset(BaseModel):
-    asset_name: str
-    asset_url: str  # URL of the asset in cloud storage or file system
 
 @router.post("/api/sync/assets")
 async def sync_assets(sync_request: List[SyncAsset], user=Depends(get_current_user)):

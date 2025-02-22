@@ -1,21 +1,14 @@
-from firebase_admin import credentials, initialize_app, auth, db
-from fastapi import UploadFile, File
-import app.models.model_types as modelType
-from app.helpers import ai_helpers
-from app.utils import utils
-import json
-from typing import *
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
+from pydantic import BaseModel
+from firebase_admin import firestore, auth, storage, messaging
+from google.cloud import vision, speech_v1p1beta1 as speech
+from config import db
+import io
+from typing import Optional, List
+import uuid
 import os
-import firebase_admin
-from fastapi import APIRouter, HTTPException
+import dotenv
 
-# Initialize the Firebase Admin SDK with the downloaded service account key
-# cred = credentials.Certificate("C:\Users\Khwaish\Downloads\kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
-# initialize_app(cred)
-
-auth = auth()
-
-router = APIRouter()
 
 """
 User Cart (in Database):
@@ -45,69 +38,110 @@ Clear all items from the user's cart.
 
 """
 
+dotenv.load_dotenv()
+CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
+FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"
+FCM_URL = "https://fcm.googleapis.com/fcm/send"
 
-# @router.post("/cart/add")
-# async def add_to_cart(item_id: str, quantity: int):
-#     """
-#     Adds an item to the user's cart.
-#     """
-#     user_id = get_current_user_id()  # Replace with your authentication logic
+router = APIRouter()
 
-#     # Check if item exists
-#     inventory_ref = db.reference("inventory").child(item_id)
-#     inventory_data = await inventory_ref.get()
+# Google Cloud Services
+speech_client = speech.SpeechClient()
 
-#     if not inventory_data.exists():
-#         raise HTTPException(status_code=404, detail="Item not found")
+class CartItemRequest(BaseModel):
+    item_id: str
+    quantity: int
 
-#     # Get farm ID from inventory data
-#     farm_id = inventory_data.val()["farm"]
+# Middleware for Firebase authentication
+def get_current_user(user_id: str):
+    try:
+        user = auth.get_user(user_id)
+        return user
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
-#     # Check if cart already has items from a different farm
-#     cart_ref = db.reference("carts").child(user_id)
-#     cart_snapshot = await cart_ref.get()
+@router.post("/cart/add")
+async def add_to_cart(request: CartItemRequest, user=Depends(get_current_user)):
+    """
+    Adds an item to the user's cart.
+    """
+    try:
+        inventory_ref = db.reference("inventory").child(request.item_id)
+        inventory_data = inventory_ref.get()
+        if not inventory_data:
+            raise HTTPException(status_code=404, detail="Item not found")
+        farm_id = inventory_data["farm"]
 
-#     if cart_snapshot.exists():
-#         cart_data = cart_snapshot.val()
-#         if cart_data and cart_data["items"] and cart_data["items"][0]["farm_id"] != farm_id:
-#             raise HTTPException(status_code=400, detail="Cart can only have items from the same farm")
+        cart_ref = db.reference("carts").child(user.uid)
+        cart_data = cart_ref.get() or {"items": []}
+        if cart_data["items"] and cart_data["items"][0]["farm_id"] != farm_id:
+            raise HTTPException(status_code=400, detail="Cart can only have items from the same farm")
 
-#     # Update or create cart
-#     cart_data = {"items": []} if not cart_snapshot.exists() else cart_snapshot.val()
-#     cart_data["items"].append({"item_id": item_id, "quantity": quantity, "farm_id": farm_id})
-#     await cart_ref.set(cart_data)
+        cart_data["items"].append({"item_id": request.item_id, "quantity": request.quantity, "farm_id": farm_id})
+        cart_ref.set(cart_data)
 
-#     return {"message": "Item added to cart successfully"}
+        return {"message": "Item added to cart successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-# @router.get("/cart")
-# async def view_cart():
-#     """
-#     Retrieves the user's cart items and calculates the total bill.
-#     """
-#     user_id = get_current_user_id()  # Replace with your authentication logic
-#     cart_ref = db.reference("carts").child(user_id)
-#     cart_snapshot = await cart_ref.get()
+@router.get("/cart")
+async def view_cart(user=Depends(get_current_user)):
+    """
+    Retrieves the user's cart items and calculates the total bill.
+    """
+    try:
+        cart_ref = db.reference("carts").child(user.uid)
+        cart_data = cart_ref.get() or {"items": []}
+        total_bill = 0
+        for item in cart_data.get("items", []):
+            inventory_ref = db.reference("inventory").child(item["item_id"])
+            inventory_data = inventory_ref.get()
+            if inventory_data:
+                item_price = inventory_data["price"]["value"] * item["quantity"]
+                total_bill += item_price
+        return {"items": cart_data["items"], "total_bill": total_bill}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-#     cart_data = cart_snapshot.val() if cart_snapshot.exists() else {"items": []}
-#     total_bill = 0
+@router.put("/cart/{item_id}")
+async def update_cart_quantity(item_id: str, quantity: int, user=Depends(get_current_user)):
+    """
+    Updates the quantity of an item in the cart.
+    """
+    try:
+        cart_ref = db.reference("carts").child(user.uid)
+        cart_data = cart_ref.get() or {"items": []}
+        for item in cart_data["items"]:
+            if item["item_id"] == item_id:
+                item["quantity"] = quantity
+                cart_ref.set(cart_data)
+                return {"message": "Cart updated successfully"}
+        raise HTTPException(status_code=404, detail="Item not found in cart")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-#     for item in cart_data.get("items", []):
-#         inventory_ref = db.reference("inventory").child(item["item_id"])
-#         inventory_data = await inventory_ref.get()
-#         if inventory_data.exists():
-#             item_price = inventory_data.val()["price"]["value"] * item["quantity"]
-#             total_bill += item_price
+@router.delete("/cart/{item_id}")
+async def remove_from_cart(item_id: str, user=Depends(get_current_user)):
+    """
+    Remove the specified item from the cart.
+    """
+    try:
+        cart_ref = db.reference("carts").child(user.uid)
+        cart_data = cart_ref.get() or {"items": []}
+        cart_data["items"] = [item for item in cart_data["items"] if item["item_id"] != item_id]
+        cart_ref.set(cart_data)
+        return {"message": "Item removed from cart successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-#     return {"items": cart_data["items"], "total_bill": total_bill}
-
-# @router.put("/cart/{item_id}")
-# async def update_cart_quantity(item_id: str, quantity: int):
-#     """
-#     Updates the quantity of an item in the cart.
-#     """
-#     user_id = get_current_user_id()  # Replace with your authentication logic
-#     cart_ref = db.reference("carts").child(user_id)
-
-#     # Update cart item quantity
-#     cart_snapshot = await cart_ref.get()
-#     cart_data = cart_snapshot.val() if cart
+@router.delete("/cart/empty")
+async def empty_cart(user=Depends(get_current_user)):
+    """
+    Clear all items from the user's cart.
+    """
+    try:
+        cart_ref = db.reference("carts").child(user.uid)
+        cart_ref.set({"items": []})
+        return {"message": "Cart emptied successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -28,13 +28,6 @@ async def get_retail_partners():
 
 from pydantic import BaseModel
 
-class RetailPartner(BaseModel):
-    name: str
-    location: str
-    contact_info: str
-    business_type: str
-    rating: float
-    user_id: str
 
 @router.post("/api/partners/retail")
 async def add_retail_partner(partner: RetailPartner):
@@ -57,13 +50,6 @@ async def add_retail_partner(partner: RetailPartner):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to add retail partner: {str(e)}")
 
-class UpdatePartnerDetails(BaseModel):
-    partner_id: str
-    name: str = None
-    location: str = None
-    contact_info: str = None
-    business_type: str = None
-    rating: float = None
 
 @router.put("/api/partners/update")
 async def update_partner_details(details: UpdatePartnerDetails):
@@ -129,12 +115,7 @@ async def get_cold_storage_partners(user=Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve cold storage partners: {str(e)}")
 
-class ColdStoragePartner(BaseModel):
-    name: str
-    location: str
-    capacity: int  # In terms of volume or quantity
-    contact_info: str
-    user_id: str
+
 
 @router.post("/api/partners/cold-storage")
 async def add_cold_storage_partner(partner: ColdStoragePartner, user=Depends(get_current_user)):
@@ -173,13 +154,6 @@ async def get_transport_partners(user=Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve transport partners: {str(e)}")
 
-class UpdatePartnerDetails(BaseModel):
-    partner_id: str
-    name: str = None
-    location: str = None
-    fleet_size: int = None  # For transport partners
-    capacity: int = None  # For cold storage partners
-    contact_info: str = None
 
 @router.put("/api/partners/update")
 async def update_partner_details(details: UpdatePartnerDetails, user=Depends(get_current_user)):

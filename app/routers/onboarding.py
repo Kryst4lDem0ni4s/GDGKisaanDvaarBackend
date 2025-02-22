@@ -54,10 +54,7 @@ async def get_onboarding_tips(user=Depends(get_current_user)):
 #     - content: "Tip 1: Keep your inventory up to date to attract more buyers!"
 #     - content: "Tip 2: Use the chat feature to communicate directly with customers."
 
-class OnboardingTask(BaseModel):
-    task_id: str
-    task_name: str
-    completed: bool
+
 
 @router.get("/api/onboarding/checklist")
 async def get_onboarding_checklist(user=Depends(get_current_user)):
@@ -99,9 +96,6 @@ async def get_onboarding_checklist(user=Depends(get_current_user)):
 # });
 # This way, when a user completes a task, the checklist will be updated in real time.
 
-class OnboardingTaskUpdate(BaseModel):
-    task_id: str
-    completed: bool
 
 @router.put("/api/onboarding/update-progress")
 async def update_task_progress(task_update: OnboardingTaskUpdate, user=Depends(get_current_user)):

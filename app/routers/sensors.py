@@ -9,13 +9,6 @@ router = APIRouter()
 db = firestore.Client()
 sensors_ref = db.collection("sensors_data")
 
-class SensorData(BaseModel):
-    sensor_id: str
-    temperature: float
-    humidity: float
-    soil_moisture: float
-    timestamp: str  # ISO format
-
 @router.post("/api/sensors/data")
 async def ingest_sensor_data(data: SensorData, user=Depends(get_current_user)):
     """
@@ -77,11 +70,6 @@ async def get_sensor_alerts(user=Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class SensorConfig(BaseModel):
-    threshold_temperature: float
-    threshold_humidity: float
-    threshold_soil_moisture: float
-
 @router.put("/api/sensors/{sensorId}/config")
 async def update_sensor_config(sensorId: str, config: SensorConfig, user=Depends(get_current_user)):
     """
@@ -117,12 +105,6 @@ async def get_sensor_status(sensorId: str, user=Depends(get_current_user)):
         return {"sensor_id": sensorId, "status": status_data.to_dict()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-class SensorThresholds(BaseModel):
-    temperature_threshold: float
-    humidity_threshold: float
-    soil_moisture_threshold: float
-    sensor_id: str = None  # If None, set global thresholds
 
 @router.post("/api/sensors/thresholds")
 async def set_sensor_thresholds(thresholds: SensorThresholds, user=Depends(get_current_user)):
@@ -204,10 +186,6 @@ async def get_sensors_diagnostics(user=Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-class AcknowledgeAlert(BaseModel):
-    alert_id: str
-    acknowledged: bool
 
 @router.post("/api/sensors/alerts/acknowledge")
 async def acknowledge_alert(alert_data: AcknowledgeAlert, user=Depends(get_current_user)):

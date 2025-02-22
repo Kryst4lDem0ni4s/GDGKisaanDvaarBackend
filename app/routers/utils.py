@@ -28,13 +28,6 @@ async def get_config():
 
 from pydantic import BaseModel
 
-class LogData(BaseModel):
-    user_id: str
-    log_type: str  # e.g., "error", "event"
-    message: str
-    timestamp: str
-    metadata: Dict[str, str] = {}  # Additional data
-
 @router.post("/api/logs")
 async def submit_logs(log: LogData):
     """

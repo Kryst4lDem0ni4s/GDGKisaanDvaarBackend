@@ -2,19 +2,10 @@ import os
 import dotenv 
 from firebase_admin import credentials, initialize_app, auth
 from fastapi import Request, UploadFile, File, requests
-import firebase_admin._user_identifier
-import firebase_admin.auth
-import firebase_admin.instance_id
 import app.models.model_types as modelType
-from app.helpers import ai_helpers
-from app.utils import utils
 from typing import Dict, Any, List
-from pydantic import EmailStr, Field
 from fastapi import HTTPException, status
-from app.helpers.ai_helpers import EmailAddress, PhoneNumber
 from app.models.model_types import EmailRequest, Language, UpdatePasswordRequest, UserSettings
-from app.helpers import ai_helpers
-from app.utils import utils
 from firebase_admin import db
 import firebase_admin
 from fastapi import APIRouter, Depends, Request, HTTPException
@@ -125,7 +116,6 @@ async def register(
             firstname=verification_request.firstname,
             lastname=verification_request.lastname,
             username=verification_request.username,
-            password=verification_request.password,
             phonenumber=verification_request.phone_number
         )
 

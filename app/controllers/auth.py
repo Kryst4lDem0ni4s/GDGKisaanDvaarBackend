@@ -1,11 +1,11 @@
-from fastapi import HTTPException, dependencies, status, FastAPI
+from fastapi import Depends, HTTPException, status, FastAPI
 import smtplib  # For sending reset emails (Note: You might need to install this library)
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from firebase_admin import db
 from firebase_admin import auth
 import firebase_admin
-from models.model_types import ProfileData
+from ..models.model_types import ProfileData
 
 app = FastAPI()
 
@@ -38,8 +38,8 @@ class UserAuth:
         except Exception as e:
             raise HTTPException(status_code=404, detail="User not found")
 
-    @dependencies
-    def get_current_user(token: str):
+    @staticmethod
+    def get_current_user(token: str = Depends(auth.verify_id_token)):
         try:
             decoded_token = auth.verify_id_token(token)
             return decoded_token

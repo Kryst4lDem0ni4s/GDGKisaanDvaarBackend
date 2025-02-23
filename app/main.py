@@ -9,11 +9,11 @@ from app.routers import auth, market, marketplace, chatbot, inventory, ai, analy
 
 router = APIRouter()
 
-origins = [settings.CLIENT_ORIGIN]
+# origins = [settings.CLIENT_ORIGIN]
 
 origins = [
-    "http://localhost:YOUR_FLUTTER_PORT",  # Replace with your Flutter port
-    "http://127.0.0.1:YOUR_FLUTTER_PORT",  # Sometimes needed
+    "http://localhost:3001",  # Replace with your Flutter port
+    "http://127.0.0.1:3001",  # Sometimes needed
 ]
 
 

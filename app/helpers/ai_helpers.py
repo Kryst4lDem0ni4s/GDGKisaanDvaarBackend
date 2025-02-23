@@ -10,10 +10,10 @@ from firebase_admin import messaging
 
 
 # Fetch OpenAI API key from system environment variables
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# openai.api_key = os.getenv('OPENAI_API_KEY')
 
-if not openai.api_key:
-    raise ValueError("OpenAI API key not found. Please set the 'OPENAI_API_KEY' environment variable.")
+# if not openai.api_key:
+#     raise ValueError("OpenAI API key not found. Please set the 'OPENAI_API_KEY' environment variable.")
 
 # # Load the dataset from a spreadsheet (CSV or Excel)
 # def load_dataset(file_path):

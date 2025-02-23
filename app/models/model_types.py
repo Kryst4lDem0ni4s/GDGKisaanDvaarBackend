@@ -14,6 +14,7 @@ class Language(BaseModel):
 class Query(BaseModel):
     query: str
     
+# Table for user accounts, including fields such as userID (primary key), email, phone number, hashed password
 class SignUpRequest(BaseModel):
     email: str
     username: str

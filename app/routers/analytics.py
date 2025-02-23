@@ -7,6 +7,9 @@ import aioredis
 from fastapi_limiter import FastAPILimiter
 from app.routers.ai import get_current_user
 
+app_routers = FastAPILimiter()
+limit = 10
+result = app_routers.limit(limit)
 
 # FastAPILimiter.init_redis()
 # FastAPILimiter.init_app(app)

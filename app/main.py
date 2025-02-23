@@ -11,6 +11,12 @@ router = APIRouter()
 
 origins = [settings.CLIENT_ORIGIN]
 
+origins = [
+    "http://localhost:YOUR_FLUTTER_PORT",  # Replace with your Flutter port
+    "http://127.0.0.1:YOUR_FLUTTER_PORT",  # Sometimes needed
+]
+
+
 router.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

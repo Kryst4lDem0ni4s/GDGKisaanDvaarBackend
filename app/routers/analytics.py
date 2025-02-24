@@ -3,14 +3,14 @@ from fastapi_limiter.depends import RateLimiter
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud import firestore as gcp_firestore
-import aioredis
+import redis
 from fastapi_limiter import FastAPILimiter
 from app.routers.ai import get_current_user
 from firebase_admin import db
 
 app_routers = FastAPILimiter()
 limit = 10
-result = app_routers.limit(limit)
+result = RateLimiter(limit)
 
 # FastAPILimiter.init_redis()
 # FastAPILimiter.init_app(app)

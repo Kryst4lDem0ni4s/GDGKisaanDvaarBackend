@@ -1,10 +1,18 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from firebase_admin import firestore, auth
 from app.models.model_types import BotQueryRequest, ForumCommentRequest, ForumThreadRequest, ModerateThreadRequest, ReportRequest, UpdateThreadRequest, VoteRequest
 from firebase_admin import db
 import speech_recognition as sr
 import io
 from app.routers.ai import get_current_user
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
+from pydantic import BaseModel
+from firebase_admin import firestore, auth
+import speech_recognition as sr
+import io
+from typing import Optional
+from google.cloud import firestore
+
+db = firestore.Client()
 
 
 router = APIRouter()
@@ -156,14 +164,6 @@ async def create_forum_comment(threadId: str, request: ForumCommentRequest, user
         return {"message": "Comment added successfully", "comment_id": comment_ref.id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth
-from config import db
-import speech_recognition as sr
-import io
-from typing import Optional
 
 router = APIRouter()
 

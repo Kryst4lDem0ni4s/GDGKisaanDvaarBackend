@@ -1,5 +1,4 @@
-from fastapi import UploadFile
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel
 from pydantic import BaseModel, EmailStr, constr, Field
 from typing import *
 

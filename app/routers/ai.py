@@ -1,29 +1,19 @@
-import io
 import os
-import logging
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth, storage
-from google.cloud import vision
-from typing import Optional, List
+from firebase_admin import firestore, auth, storage, db
 import uuid
 from app.models.model_types import AIFeedback, AudioFeedbackRequest, MarketForecastRequest, ModelFeedbackRequest, ResourceOptimizationRequest, TransportRouteRequest, TrendAnalysisRequest
-from flask import Flask, request, jsonify
-from google.cloud import vision, storage, firestore
+from flask import request, jsonify
+from google.cloud import storage, firestore, vision
 import requests
 import binascii
 from datetime import datetime
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from pydantic import BaseModel
-from firebase_admin import firestore, auth, storage
-from google.cloud import vision, speech_v1p1beta1 as speech
-from config import db
-import io
-from typing import Optional, List
+from google.cloud import speech_v1p1beta1 as speech
+from typing import List
 import uuid
-from app.routers.ai import get_current_user
-
+from google.cloud import firestore
 
 router = APIRouter()
 
@@ -31,6 +21,8 @@ router = APIRouter()
 speech_client = speech.SpeechClient()
 storage_client = storage.Client()
 vision_client = vision.ImageAnnotatorClient()
+bucket_name = os.getenv("BUCKET_NAME")
+weather_api_key = os.getenv("WEATHER_API_KEY")
 
 # Firestore initialization
 db = firestore.Client()
@@ -45,7 +37,7 @@ def get_current_user(user_id: str):
         raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
     
 def upload_to_storage(file, filename):
-    bucket = storage_client.bucket(BUCKET_NAME)
+    bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(filename)
     blob.upload_from_file(file)
     return blob.public_url
@@ -444,7 +436,7 @@ async def get_transport_route_status(routeId: str, user=Depends(get_current_user
         raise HTTPException(status_code=500, detail=str(e))
 
 # Remote Sensing Endpoints
-@router.post('/api/ai/remote-sensing', methods=['POST'])
+@router.post('/api/ai/remote-sensing')
 def trigger_remote_sensing():
     if 'image' not in request.files:
         return jsonify({"error": "No image provided"}), 400
@@ -484,7 +476,7 @@ def get_weather():
     if not lat or not lon:
         return jsonify({"error": "Latitude and longitude required"}), 400
     
-    url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={WEATHER_API_KEY}"
+    url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={weather_api_key}"
     response = requests.get(url)
     if response.status_code != 200:
         return jsonify({"error": "Weather API error"}), 500

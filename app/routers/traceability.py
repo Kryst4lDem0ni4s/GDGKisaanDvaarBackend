@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from firebase_admin import firestore, auth, storage
 from google.cloud import vision, speech_v1p1beta1 as speech
 from app.models.model_types import ModerateReviewRequest, ReviewRequest, TraceabilityScanRequest
-from config import db
+from firebase_admin import db
 import io
 from typing import Optional, List
 import uuid

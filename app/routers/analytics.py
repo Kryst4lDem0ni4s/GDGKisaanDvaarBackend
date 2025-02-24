@@ -6,6 +6,7 @@ from google.cloud import firestore as gcp_firestore
 import aioredis
 from fastapi_limiter import FastAPILimiter
 from app.routers.ai import get_current_user
+from firebase_admin import db
 
 app_routers = FastAPILimiter()
 limit = 10
@@ -15,9 +16,6 @@ result = app_routers.limit(limit)
 # FastAPILimiter.init_app(app)
 
 router = APIRouter()
-
-# Firestore client initialization
-db = firestore.Client()
 
 @router.get("/api/analytics/users")
 async def get_user_engagement():

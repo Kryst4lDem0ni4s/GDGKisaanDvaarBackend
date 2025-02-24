@@ -1,21 +1,17 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from firebase_admin import firestore, auth, storage, messaging
-from google.cloud import vision, speech_v1p1beta1 as speech
+from firebase_admin import db
+from google.cloud import speech_v1p1beta1 as speech
 from app.helpers.ai_helpers import find_common_items
 from app.models.model_types import MarketplaceQueryRequest
-from config import db
 import io
-from typing import Optional, List
 import uuid
 import os
 import dotenv
 from geopy.distance import distance as geopy_distance
 from geopy.geocoders import Nominatim
 
+
 dotenv.load_dotenv()
-CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
-FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"
-FCM_URL = "https://fcm.googleapis.com/fcm/send"
 
 # Google Cloud Services
 speech_client = speech.SpeechClient()

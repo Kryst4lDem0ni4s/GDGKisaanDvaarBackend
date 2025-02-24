@@ -1,7 +1,7 @@
 import io
 from firebase_admin import firestore, auth
 from app.models.model_types import BotQueryRequest, NewConversationRequest, NewMessageRequest, UpdateConversationRequest
-from config import db
+from firebase_admin import db
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 import speech_recognition as sr
 from app.routers.ai import get_current_user

@@ -1,7 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
 from google.cloud import firestore
-import uuid
 from app.models.model_types import AcknowledgeAlert, SensorConfig, SensorData, SensorThresholds
 from app.routers.ai import get_current_user
 

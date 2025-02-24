@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
 from google.cloud import firestore
-from pydantic import BaseModel
 from typing import List
 from app.models.model_types import SyncAsset, SyncChatRequest, SyncConflictResolution, SyncInventoryRequest, SyncOrderRequest, UserSettingsSync
 from app.routers.ai import get_current_user

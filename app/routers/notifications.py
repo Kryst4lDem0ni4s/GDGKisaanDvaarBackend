@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
-from firebase_admin import firestore, auth, storage, messaging
+from firebase_admin import firestore, auth, storage, messaging, db
 from google.cloud import vision, speech_v1p1beta1 as speech
 from app.models.model_types import NotificationRequest, NotificationSubscriptionRequest
-from config import db
 from app.routers.ai import get_current_user
 
 router = APIRouter()

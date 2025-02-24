@@ -22,9 +22,13 @@ class Settings(BaseSettings):
         # AZURE_ENDPOINT: str
         # API_KEY: str
         # API_VERSION: str
-        # BASE_DIR: str
-        # CREDENTIALS_FILE: str
-
+        GOOGLE_APPLICATION_CREDENTIALS: str
+        CREDENTIALS_FILE: str
+        FCM_URL: str
+        BUCKET_NAME: str
+        WEATHER_API_KEY: str
+        RAZORPAY_KEY_ID: str
+        RAZORPAY_KEY_SECRET: str
 
         class Config:
                 env_file = './.env'

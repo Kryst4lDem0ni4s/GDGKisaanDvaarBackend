@@ -1,7 +1,7 @@
 from fastapi import APIRouter, FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List
-from firebase_admin import auth, credentials, firestore, initialize_app
+from firebase_admin import auth, credentials, firestore, initialize_app, db
 from uuid import uuid4
 import datetime
 import dotenv
@@ -13,10 +13,6 @@ from models.model_types import OrderCancellation, OrderFeedback, Order, OrderSta
 dotenv.load_dotenv()
 CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
 cred = credentials.Certificate(CREDENTIALS_FILE)
-
-db = firestore.client()
-
-initialize_app(cred, {"databaseURL": os.getenv("DATABASE_URL")})
 
 router = APIRouter()
 

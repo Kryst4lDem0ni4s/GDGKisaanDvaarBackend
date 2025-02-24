@@ -3,13 +3,16 @@ from app.models.model_types import IntegrationTokenRequest, PaymentConfirmation,
 import razorpay
 from pydantic import BaseModel
 from firebase_admin import auth
-from config import RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, db
+from firebase_admin import db
 from app.routers.ai import get_current_user
+import os
 
 router = APIRouter()
+razorpay_key_id = os.getenv("RAZORPAY_KEY_ID")
+razorpay_key_secret = os.getenv("RAZORPAY_KEY_SECRET")
 
 # Razorpay client
-razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+razorpay_client = razorpay.Client(auth=(razorpay_key_id, razorpay_key_secret))
 
 
 @router.post("/api/payments/initiate")

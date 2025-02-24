@@ -14,14 +14,8 @@ import smtplib  # For sending reset emails (Note: You might need to install this
 from app.controllers.auth import UserAuth, AuthService
 
 dotenv.load_dotenv()
-CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
-cred = credentials.Certificate(CREDENTIALS_FILE)
 
-# FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"
-fcm_url =  os.getenv("FCM_URL")
-
-firebase_admin.initialize_app(cred, {"databaseURL": os.getenv("DATABASE_URL")})
-
+fcm_url = os.getenv("FCM_URL")
 router = APIRouter()
 
 auth_service = auth
@@ -59,8 +53,8 @@ async def send_notification(device_token: str, title: str, body: str):
     Send push notification to a device using Firebase Cloud Messaging.
     """
     headers = {
-        "Authorization": f"key={FCM_SERVER_KEY}",
-        "Content-Type": "application/json"
+    'Authorization': 'Bearer ' + UserAuth._get_access_token(),
+    'Content-Type': 'application/json; UTF-8',
     }
     payload = {
         "to": device_token,
@@ -69,7 +63,7 @@ async def send_notification(device_token: str, title: str, body: str):
             "body": body
         }
     }
-    response = requests.post(FCM_URL, json=payload, headers=headers)
+    response = requests.post(fcm_url, json=payload, headers=headers)
 
     if response.status_code == 200:
         return {"status": "success", "message": "Notification sent"}

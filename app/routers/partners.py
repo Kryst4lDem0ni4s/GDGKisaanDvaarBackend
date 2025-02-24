@@ -3,11 +3,9 @@ from google.cloud import firestore
 from typing import List
 from app.models.model_types import ColdStoragePartner, RetailPartner, UpdatePartnerDetails
 from app.routers.ai import get_current_user
+from firebase_admin import db
 
 router = APIRouter()
-
-# Firestore client initialization
-db = firestore.Client()
 
 @router.get("/api/partners/retail")
 async def get_retail_partners():

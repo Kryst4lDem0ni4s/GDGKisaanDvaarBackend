@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from firebase_admin import firestore, auth, storage, messaging
 from google.cloud import vision, speech_v1p1beta1 as speech
 from app.models.model_types import CartItemRequest
-from config import db
+from firebase_admin import db
 import io
 from typing import Optional, List
 import uuid
@@ -15,7 +15,7 @@ from app.routers.ai import get_current_user
 User Cart (in Database):
 user_id (reference to the user document)
 items (array of objects):
-item_id (reference to the inventory item document)
+item_id (reference to the in ventory item document)
 quantity (number)
 farm_id (reference to the seller's document) - Required to ensure items are bought from the same farm
 

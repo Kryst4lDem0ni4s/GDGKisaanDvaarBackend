@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from firebase_admin import firestore, auth
 from app.models.model_types import BotQueryRequest, ForumCommentRequest, ForumThreadRequest, ModerateThreadRequest, ReportRequest, UpdateThreadRequest, VoteRequest
-from config import db
+from firebase_admin import db
 import speech_recognition as sr
 import io
 from app.routers.ai import get_current_user

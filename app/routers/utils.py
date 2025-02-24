@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from google.cloud import firestore
-from typing import Dict
 from firebase_admin import auth
 from app.helpers.ai_helpers import get_admin_user
 from app.models.model_types import LogData

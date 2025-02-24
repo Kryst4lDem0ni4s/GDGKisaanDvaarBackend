@@ -3,17 +3,13 @@ from fastapi import UploadFile, File
 import app.models.model_types as modelType
 from app.helpers import ai_helpers
 from app.utils import utils
-import json
 from typing import *
 import os
-import firebase_admin
+from google.cloud import firestore
 from fastapi import APIRouter, HTTPException
 from app.routers.ai import get_current_user
 
-
-# Initialize the Firebase Admin SDK with the downloaded service account key
-# cred = credentials.Certificate("D:/DdriveCodes/SIH/app/helpers/kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
-# initialize_app(cred)
+db = firestore.Client()
 
 #auth = auth()
 

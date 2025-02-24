@@ -2,6 +2,7 @@ from firebase_admin import credentials, initialize_app, auth
 from typing import *
 from fastapi import APIRouter, HTTPException
 from app.routers.ai import get_current_user
+from firebase_admin import db
 
 # Initialize the Firebase Admin SDK with the downloaded service account key
 cred = credentials.Certificate("C:\Users\Khwaish\Downloads\kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
@@ -10,8 +11,6 @@ initialize_app(cred)
 auth = auth()
 
 router = APIRouter()
-
-from firebase_admin import db
 
 @router.post("/cold_storage_services")
 async def create_cold_storage_service(name, address, phone_number, email=None, website=None, description="", minimum_quantity=0, areas_served=[], payment_methods=[], rating=0, favorites=[], status="active"):

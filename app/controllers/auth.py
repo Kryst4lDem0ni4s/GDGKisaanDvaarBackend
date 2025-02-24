@@ -6,12 +6,13 @@ from firebase_admin import db
 from firebase_admin import auth
 import firebase_admin
 from ..models.model_types import ProfileData
+import google.auth.transport.requests
+from google.oauth2 import service_account
+import os
+
+scopes = os.getenv("SCOPES")
 
 app = FastAPI()
-
-# Ensure Firebase is initialized
-if not firebase_admin._apps:
-    firebase_admin.initialize_app()
 
 class UserAuth:
         
@@ -45,6 +46,27 @@ class UserAuth:
             return decoded_token
         except Exception:
             raise HTTPException(status_code=401, detail="Invalid authentication token")
+    
+    @staticmethod
+    def get_admin_user(token: str = Depends(auth.verify_id_token)):
+        """
+        Verifies if the user is an admin by checking the Firebase custom claims.
+        """
+        if token.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Access forbidden: Admins only.")
+        return token
+    
+    @staticmethod
+    def _get_access_token():
+        """Retrieve a valid access token that can be used to authorize requests.
+
+        :return: Access token.
+        """
+        credentials = service_account.Credentials.from_service_account_file(
+            'service-account.json', scopes=scopes)
+        request = google.auth.transport.requests.Request()
+        credentials.refresh(request)
+        return credentials.token
 
 class AuthService:
     

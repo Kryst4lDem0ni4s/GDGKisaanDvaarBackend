@@ -1,6 +1,9 @@
+import os
 from fastapi import APIRouter
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from firebase_admin import credentials
+import firebase_admin
 import uvicorn
 
 load_dotenv()
@@ -16,6 +19,10 @@ origins = [
     "http://127.0.0.1:3001",  # Sometimes needed
 ]
 
+CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
+cred = credentials.Certificate(CREDENTIALS_FILE)
+
+firebase_admin.initialize_app(cred)
 
 router.add_middleware(
     CORSMiddleware,

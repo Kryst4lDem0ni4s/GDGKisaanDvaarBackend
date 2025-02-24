@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
 from firebase_admin import firestore, auth
 from app.models.model_types import GroupInviteRequest, GroupRequest, UpdateGroupRequest
-from config import db
+from firebase_admin import db
 import speech_recognition as sr
 import io
 from typing import Optional, List

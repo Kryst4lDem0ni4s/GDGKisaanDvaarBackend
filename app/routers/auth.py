@@ -17,10 +17,10 @@ dotenv.load_dotenv()
 CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
 cred = credentials.Certificate(CREDENTIALS_FILE)
 
-FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"
-FCM_URL = "https://fcm.googleapis.com/fcm/send"
+# FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY"
+fcm_url =  os.getenv("FCM_URL")
 
-initialize_app(cred, {"databaseURL": os.getenv("DATABASE_URL")})
+firebase_admin.initialize_app(cred, {"databaseURL": os.getenv("DATABASE_URL")})
 
 router = APIRouter()
 

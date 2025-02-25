@@ -36,7 +36,7 @@ async def create_order(order: Order, user=Depends(get_current_user)):
     
     db.collection("orders").document(order_id).set(order_data)
     return {"message": "Order created successfully", "orderId": order_id}
-
+#commit
 # GET /api/orders/{orderId} - Fetch a specific order
 @router.get("/api/orders/{orderId}", response_model=dict)
 async def get_order(orderId: str, user=Depends(get_current_user)):

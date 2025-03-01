@@ -7,7 +7,7 @@ from firebase_admin import db
 import io
 from typing import Optional, List
 import uuid
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 
 router = APIRouter()
 
@@ -15,7 +15,7 @@ router = APIRouter()
 speech_client = speech.SpeechClient()
 
 @router.get("/api/traceability")
-async def get_traceability(product_id: str, user=Depends(get_current_user)):
+async def get_traceability(product_id: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve traceability data for a specific product.
     """
@@ -28,7 +28,7 @@ async def get_traceability(product_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/traceability/scan")
-async def scan_traceability_code(request: TraceabilityScanRequest, user=Depends(get_current_user)):
+async def scan_traceability_code(request: TraceabilityScanRequest, user=Depends(UserAuth.get_current_user)):
     """
     Scan a QR code or Barcode for product tracking.
     """
@@ -42,7 +42,7 @@ async def scan_traceability_code(request: TraceabilityScanRequest, user=Depends(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/traceability/upload")
-async def upload_traceability_document(file: UploadFile = File(...), product_id: str = Query(...), document_type: str = Query(...), user=Depends(get_current_user)):
+async def upload_traceability_document(file: UploadFile = File(...), product_id: str = Query(...), document_type: str = Query(...), user=Depends(UserAuth.get_current_user)):
     """
     Upload supporting traceability documents for a product.
     """
@@ -63,7 +63,7 @@ async def upload_traceability_document(file: UploadFile = File(...), product_id:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/reviews")
-async def get_reviews(product_id: str, user=Depends(get_current_user)):
+async def get_reviews(product_id: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve reviews for a specific product.
     """
@@ -75,7 +75,7 @@ async def get_reviews(product_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/reviews")
-async def submit_review(request: ReviewRequest, user=Depends(get_current_user)):
+async def submit_review(request: ReviewRequest, user=Depends(UserAuth.get_current_user)):
     """
     Submit a review for a product.
     """
@@ -93,7 +93,7 @@ async def submit_review(request: ReviewRequest, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/reviews/summary")
-async def get_review_summary(product_id: str, user=Depends(get_current_user)):
+async def get_review_summary(product_id: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve summary of reviews (e.g., average rating) for a product.
     """
@@ -109,7 +109,7 @@ async def get_review_summary(product_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/api/reviews/{reviewId}")
-async def edit_review(reviewId: str, request: ReviewRequest, user=Depends(get_current_user)):
+async def edit_review(reviewId: str, request: ReviewRequest, user=Depends(UserAuth.get_current_user)):
     """
     Edit an existing review (if editing is allowed).
     """
@@ -126,7 +126,7 @@ async def edit_review(reviewId: str, request: ReviewRequest, user=Depends(get_cu
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/api/reviews/{reviewId}")
-async def delete_review(reviewId: str, product_id: str, user=Depends(get_current_user)):
+async def delete_review(reviewId: str, product_id: str, user=Depends(UserAuth.get_current_user)):
     """
     Delete a review.
     """
@@ -143,7 +143,7 @@ async def delete_review(reviewId: str, product_id: str, user=Depends(get_current
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/users/{userId}/reviews")
-async def get_user_reviews(userId: str, user=Depends(get_current_user)):
+async def get_user_reviews(userId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve a user's review history.
     """
@@ -157,7 +157,7 @@ async def get_user_reviews(userId: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/api/reviews/moderate")
-async def moderate_review(request: ModerateReviewRequest, user=Depends(get_current_user)):
+async def moderate_review(request: ModerateReviewRequest, user=Depends(UserAuth.get_current_user)):
     """
     Admin/moderator action to moderate reviews.
     """

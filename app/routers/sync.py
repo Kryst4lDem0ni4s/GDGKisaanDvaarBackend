@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from google.cloud import firestore
 from typing import List
 from app.models.model_types import SyncAsset, SyncChatRequest, SyncConflictResolution, SyncInventoryRequest, SyncOrderRequest, UserSettingsSync
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 import time
 import random
 
@@ -12,7 +12,7 @@ router = APIRouter()
 db = firestore.Client()
 
 @router.post("/api/sync/inventory")
-async def sync_inventory(sync_request: SyncInventoryRequest, user=Depends(get_current_user)):
+async def sync_inventory(sync_request: SyncInventoryRequest, user=Depends(UserAuth.get_current_user)):
     """
     Sync offline inventory changes when the user is online.
     """
@@ -45,7 +45,7 @@ async def sync_inventory(sync_request: SyncInventoryRequest, user=Depends(get_cu
         raise HTTPException(status_code=500, detail=f"Failed to sync inventory: {str(e)}")
 
 @router.post("/api/sync/chat")
-async def sync_chat(sync_request: SyncChatRequest, user=Depends(get_current_user)):
+async def sync_chat(sync_request: SyncChatRequest, user=Depends(UserAuth.get_current_user)):
     """
     Sync offline chat messages when the user is online.
     """
@@ -67,7 +67,7 @@ async def sync_chat(sync_request: SyncChatRequest, user=Depends(get_current_user
         raise HTTPException(status_code=500, detail=f"Failed to sync chat messages: {str(e)}")
 
 @router.post("/api/sync/orders")
-async def sync_orders(sync_request: SyncOrderRequest, user=Depends(get_current_user)):
+async def sync_orders(sync_request: SyncOrderRequest, user=Depends(UserAuth.get_current_user)):
     """
     Sync offline order updates when the user is online.
     """
@@ -100,7 +100,7 @@ async def sync_orders(sync_request: SyncOrderRequest, user=Depends(get_current_u
         raise HTTPException(status_code=500, detail=f"Failed to sync orders: {str(e)}")
 
 @router.post("/api/sync/settings")
-async def sync_user_settings(settings: UserSettingsSync, user=Depends(get_current_user)):
+async def sync_user_settings(settings: UserSettingsSync, user=Depends(UserAuth.get_current_user)):
     """
     Sync offline user settings when the user is online.
     """
@@ -119,7 +119,7 @@ async def sync_user_settings(settings: UserSettingsSync, user=Depends(get_curren
         raise HTTPException(status_code=500, detail=f"Failed to sync user settings: {str(e)}")
 
 @router.post("/api/sync/conflict")
-async def resolve_sync_conflict(conflict: SyncConflictResolution, user=Depends(get_current_user)):
+async def resolve_sync_conflict(conflict: SyncConflictResolution, user=Depends(UserAuth.get_current_user)):
     """
     Resolve data conflicts during sync by choosing the action: 'overwrite' or 'merge'.
     """
@@ -147,7 +147,7 @@ async def resolve_sync_conflict(conflict: SyncConflictResolution, user=Depends(g
         raise HTTPException(status_code=500, detail=f"Failed to resolve conflict: {str(e)}")
 
 @router.post("/api/sync/assets")
-async def sync_assets(sync_request: List[SyncAsset], user=Depends(get_current_user)):
+async def sync_assets(sync_request: List[SyncAsset], user=Depends(UserAuth.get_current_user)):
     """
     Sync static assets or configuration when the user is back online.
     """
@@ -165,7 +165,7 @@ async def sync_assets(sync_request: List[SyncAsset], user=Depends(get_current_us
         raise HTTPException(status_code=500, detail=f"Failed to sync assets: {str(e)}")
 
 @router.get("/api/sync/status")
-async def get_sync_status(user=Depends(get_current_user)):
+async def get_sync_status(user=Depends(UserAuth.get_current_user)):
     """
     Check the sync status to see if the user's data is fully synchronized.
     """

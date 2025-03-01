@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from google.cloud import firestore
 from typing import List
 from app.models.model_types import ColdStoragePartner, RetailPartner, UpdatePartnerDetails
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 from firebase_admin import db
 
 router = APIRouter()
@@ -95,7 +95,7 @@ async def get_partner_reviews(partnerId: str):
         raise HTTPException(status_code=500, detail=f"Failed to retrieve partner reviews: {str(e)}")
 
 @router.get("/api/partners/cold-storage")
-async def get_cold_storage_partners(user=Depends(get_current_user)):
+async def get_cold_storage_partners(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve a list of cold storage partners.
     """
@@ -115,7 +115,7 @@ async def get_cold_storage_partners(user=Depends(get_current_user)):
 
 
 @router.post("/api/partners/cold-storage")
-async def add_cold_storage_partner(partner: ColdStoragePartner, user=Depends(get_current_user)):
+async def add_cold_storage_partner(partner: ColdStoragePartner, user=Depends(UserAuth.get_current_user)):
     """
     Add a new cold storage partner.
     """
@@ -134,7 +134,7 @@ async def add_cold_storage_partner(partner: ColdStoragePartner, user=Depends(get
         raise HTTPException(status_code=500, detail=f"Failed to add cold storage partner: {str(e)}")
 
 @router.get("/api/partners/transport")
-async def get_transport_partners(user=Depends(get_current_user)):
+async def get_transport_partners(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve a list of transport partners.
     """
@@ -153,7 +153,7 @@ async def get_transport_partners(user=Depends(get_current_user)):
 
 
 @router.put("/api/partners/update")
-async def update_partner_details(details: UpdatePartnerDetails, user=Depends(get_current_user)):
+async def update_partner_details(details: UpdatePartnerDetails, user=Depends(UserAuth.get_current_user)):
     """
     Update partner details for a specific partner.
     """

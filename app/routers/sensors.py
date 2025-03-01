@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from google.cloud import firestore
 from app.models.model_types import AcknowledgeAlert, SensorConfig, SensorData, SensorThresholds
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 
 router = APIRouter()
 
@@ -10,7 +10,7 @@ db = firestore.Client()
 sensors_ref = db.collection("sensors_data")
 
 @router.post("/api/sensors/data")
-async def ingest_sensor_data(data: SensorData, user=Depends(get_current_user)):
+async def ingest_sensor_data(data: SensorData, user=Depends(UserAuth.get_current_user)):
     """
     Ingest sensor readings (e.g., temperature, humidity, soil moisture) into the system.
     """
@@ -32,7 +32,7 @@ async def ingest_sensor_data(data: SensorData, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/sensors/data/{sensorId}")
-async def get_sensor_data(sensorId: str, user=Depends(get_current_user)):
+async def get_sensor_data(sensorId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve sensor readings for a specific sensor by its ID.
     """
@@ -53,7 +53,7 @@ async def get_sensor_data(sensorId: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/sensors/alerts")
-async def get_sensor_alerts(user=Depends(get_current_user)):
+async def get_sensor_alerts(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve all sensor alerts (e.g., threshold breaches) for a user.
     """
@@ -71,7 +71,7 @@ async def get_sensor_alerts(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/api/sensors/{sensorId}/config")
-async def update_sensor_config(sensorId: str, config: SensorConfig, user=Depends(get_current_user)):
+async def update_sensor_config(sensorId: str, config: SensorConfig, user=Depends(UserAuth.get_current_user)):
     """
     Update the configuration for a specific sensor (e.g., thresholds).
     """
@@ -90,7 +90,7 @@ async def update_sensor_config(sensorId: str, config: SensorConfig, user=Depends
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/sensors/{sensorId}/status")
-async def get_sensor_status(sensorId: str, user=Depends(get_current_user)):
+async def get_sensor_status(sensorId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve the status of a specific sensor (e.g., online/offline, last connected).
     """
@@ -107,7 +107,7 @@ async def get_sensor_status(sensorId: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/sensors/thresholds")
-async def set_sensor_thresholds(thresholds: SensorThresholds, user=Depends(get_current_user)):
+async def set_sensor_thresholds(thresholds: SensorThresholds, user=Depends(UserAuth.get_current_user)):
     """
     Set global or per-sensor thresholds for various readings (temperature, humidity, etc.).
     If sensor_id is provided, thresholds are set per sensor.
@@ -140,7 +140,7 @@ async def set_sensor_thresholds(thresholds: SensorThresholds, user=Depends(get_c
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/sensors/diagnostics")
-async def get_sensors_diagnostics(user=Depends(get_current_user)):
+async def get_sensors_diagnostics(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve aggregated diagnostics for multiple sensors (e.g., average temperature, overall sensor status).
     """
@@ -188,7 +188,7 @@ async def get_sensors_diagnostics(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/sensors/alerts/acknowledge")
-async def acknowledge_alert(alert_data: AcknowledgeAlert, user=Depends(get_current_user)):
+async def acknowledge_alert(alert_data: AcknowledgeAlert, user=Depends(UserAuth.get_current_user)):
     """
     Allow users to acknowledge alerts, marking them as handled or reviewed.
     """

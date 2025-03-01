@@ -4,7 +4,7 @@ import razorpay
 from pydantic import BaseModel
 from firebase_admin import auth
 from firebase_admin import db
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 import os
 
 router = APIRouter()
@@ -16,7 +16,7 @@ razorpay_client = razorpay.Client(auth=(razorpay_key_id, razorpay_key_secret))
 
 
 @router.post("/api/payments/initiate")
-async def initiate_payment(request: PaymentRequest, user=Depends(get_current_user)):
+async def initiate_payment(request: PaymentRequest, user=Depends(UserAuth.get_current_user)):
     """
     Creates a Razorpay order and returns the order ID.
     """
@@ -42,7 +42,7 @@ async def initiate_payment(request: PaymentRequest, user=Depends(get_current_use
 
 
 @router.get("/api/payments/status")
-async def get_payment_status(order_id: str, user=Depends(get_current_user)):
+async def get_payment_status(order_id: str, user=Depends(UserAuth.get_current_user)):
     """
     Fetches payment status from Razorpay.
     """
@@ -54,7 +54,7 @@ async def get_payment_status(order_id: str, user=Depends(get_current_user)):
 
 
 @router.post("/api/payments/confirmation")
-async def confirm_payment(data: PaymentConfirmation, user=Depends(get_current_user)):
+async def confirm_payment(data: PaymentConfirmation, user=Depends(UserAuth.get_current_user)):
     """
     Verifies the payment signature and marks the order as paid.
     """
@@ -76,7 +76,7 @@ async def confirm_payment(data: PaymentConfirmation, user=Depends(get_current_us
 
 
 @router.post("/api/payments/refund")
-async def process_refund(request: RefundRequest, user=Depends(get_current_user)):
+async def process_refund(request: RefundRequest, user=Depends(UserAuth.get_current_user)):
     """
     Initiates a refund for a given payment.
     """
@@ -99,7 +99,7 @@ async def process_refund(request: RefundRequest, user=Depends(get_current_user))
 
 
 @router.get("/api/payments/history")
-async def get_payment_history(user_id: str, user=Depends(get_current_user)):
+async def get_payment_history(user_id: str, user=Depends(UserAuth.get_current_user)):
     """
     Fetches payment history for a specific user from Firebase.
     """
@@ -154,7 +154,7 @@ async def razorpay_custom_integration(data: dict):
 
 
 @router.post("/api/integrations/tokens")
-async def manage_integration_tokens(request: IntegrationTokenRequest, user=Depends(get_current_user)):
+async def manage_integration_tokens(request: IntegrationTokenRequest, user=Depends(UserAuth.get_current_user)):
     """
     Store or update integration tokens for external payment providers securely in Firebase.
     """

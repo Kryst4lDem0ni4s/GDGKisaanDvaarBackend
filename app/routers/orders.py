@@ -7,7 +7,7 @@ import datetime
 import dotenv
 import os
 from app.routers.ai import get_current_user
-from models.model_types import OrderCancellation, OrderFeedback, Order, OrderStatusUpdate
+from ..models.model_types import OrderCancellation, OrderFeedback, Order, OrderStatusUpdate
 
 # Initialize Firebase
 dotenv.load_dotenv()

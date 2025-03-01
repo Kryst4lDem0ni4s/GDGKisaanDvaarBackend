@@ -1,3 +1,4 @@
+import os
 from firebase_admin import credentials, initialize_app, auth
 from typing import *
 from fastapi import APIRouter, HTTPException
@@ -5,10 +6,8 @@ from app.routers.ai import get_current_user
 from firebase_admin import db
 
 # Initialize the Firebase Admin SDK with the downloaded service account key
-cred = credentials.Certificate("C:\Users\Khwaish\Downloads\kisaandvaar-firebase-adminsdk-t83e9-f6d6bf9844.json")
+cred = os.getenv('CREDENTIALS_FILE')
 initialize_app(cred)
-
-auth = auth()
 
 router = APIRouter()
 

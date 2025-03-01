@@ -5,10 +5,6 @@ from fastapi import APIRouter, HTTPException
 from app.routers.ai import get_current_user
 from firebase_admin import db
 
-# Initialize the Firebase Admin SDK with the downloaded service account key
-cred = os.getenv('CREDENTIALS_FILE')
-initialize_app(cred)
-
 router = APIRouter()
 
 @router.post("/cold_storage_services")

@@ -11,8 +11,6 @@ from app.routers.ai import get_current_user
 
 db = firestore.Client()
 
-#auth = auth()
-
 router = APIRouter()
 
 @router.post("/api/inventory/items")

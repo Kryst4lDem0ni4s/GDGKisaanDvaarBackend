@@ -1,16 +1,15 @@
 import os
-from fastapi import APIRouter
+from fastapi import FastAPI
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from firebase_admin import credentials
 import firebase_admin
 import uvicorn
-
-load_dotenv()
 from app.config import settings
 from app.routers import auth, market, marketplace, chatbot, inventory, ai, analytics, cart, forum, geospatial, groups, notifications, onboarding, orders, partners, payments, sensors, services, sync, traceability, translate, utils
 
-router = APIRouter()
+app = FastAPI()
+load_dotenv()
 
 # origins = [settings.CLIENT_ORIGIN]
 
@@ -24,7 +23,7 @@ cred = credentials.Certificate(CREDENTIALS_FILE)
 
 firebase_admin.initialize_app(cred)
 
-router.add_middleware(
+app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
@@ -32,31 +31,31 @@ router.add_middleware(
     allow_headers=["*"],
 )
 
-router.include_router(auth.router, tags=["Authentication"], prefix="/api/auth")
-router.include_router(market.router, tags=["Market"], prefix="/api/market")
-router.include_router(chatbot.router, tags=["Chatbot"], prefix="/api/chatbot")
-router.include_router(marketplace.router, tags=["Marketplace"], prefix="/api/marketplace")
-router.include_router(inventory.router, tags=["Inventory"], prefix="/api/inventory")
-router.include_router(ai.router, tags=["Authentication"], prefix="/api/auth")
-router.include_router(analytics.router, tags=["Market"], prefix="/api/market")
-router.include_router(cart.router, tags=["Chatbot"], prefix="/api/chatbot")
-router.include_router(forum.router, tags=["Marketplace"], prefix="/api/marketplace")
-router.include_router(geospatial.router, tags=["Inventory"], prefix="/api/inventory")
-router.include_router(groups.router, tags=["Authentication"], prefix="/api/auth")
-router.include_router(notifications.router, tags=["Market"], prefix="/api/market")
-router.include_router(onboarding.router, tags=["Chatbot"], prefix="/api/chatbot")
-router.include_router(orders.router, tags=["Marketplace"], prefix="/api/marketplace")
-router.include_router(partners.router, tags=["Inventory"], prefix="/api/inventory")
-router.include_router(payments.router, tags=["Authentication"], prefix="/api/auth")
-router.include_router(sensors.router, tags=["Market"], prefix="/api/market")
-router.include_router(services.router, tags=["Chatbot"], prefix="/api/chatbot")
-router.include_router(sync.router, tags=["Marketplace"], prefix="/api/marketplace")
-router.include_router(traceability.router, tags=["Inventory"], prefix="/api/inventory")
-router.include_router(translate.router, tags=["Authentication"], prefix="/api/auth")
-router.include_router(utils.router, tags=["Market"], prefix="/api/market")
+app.include_router(auth.router, tags=["Authentication"], prefix="/api/auth")
+app.include_router(market.router, tags=["Market"], prefix="/api/market")
+app.include_router(chatbot.router, tags=["Chatbot"], prefix="/api/chatbot")
+app.include_router(marketplace.router, tags=["Marketplace"], prefix="/api/marketplace")
+app.include_router(inventory.router, tags=["Inventory"], prefix="/api/inventory")
+app.include_router(ai.router, tags=["Authentication"], prefix="/api/auth")
+app.include_router(analytics.router, tags=["Market"], prefix="/api/market")
+app.include_router(cart.router, tags=["Chatbot"], prefix="/api/chatbot")
+app.include_router(forum.router, tags=["Marketplace"], prefix="/api/marketplace")
+app.include_router(geospatial.router, tags=["Inventory"], prefix="/api/inventory")
+app.include_router(groups.router, tags=["Authentication"], prefix="/api/auth")
+app.include_router(notifications.router, tags=["Market"], prefix="/api/market")
+app.include_router(onboarding.router, tags=["Chatbot"], prefix="/api/chatbot")
+app.include_router(orders.router, tags=["Marketplace"], prefix="/api/marketplace")
+app.include_router(partners.router, tags=["Inventory"], prefix="/api/inventory")
+app.include_router(payments.router, tags=["Authentication"], prefix="/api/auth")
+app.include_router(sensors.router, tags=["Market"], prefix="/api/market")
+app.include_router(services.router, tags=["Chatbot"], prefix="/api/chatbot")
+app.include_router(sync.router, tags=["Marketplace"], prefix="/api/marketplace")
+app.include_router(traceability.router, tags=["Inventory"], prefix="/api/inventory")
+app.include_router(translate.router, tags=["Authentication"], prefix="/api/auth")
+app.include_router(utils.router, tags=["Market"], prefix="/api/market")
 
 
-@router.get("/health")
+@app.get("/health")
 async def root():
     return {"message": "API is working fine."}
 

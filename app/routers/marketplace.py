@@ -10,9 +10,6 @@ import dotenv
 from geopy.distance import distance as geopy_distance
 from geopy.geocoders import Nominatim
 
-
-dotenv.load_dotenv()
-
 # Google Cloud Services
 speech_client = speech.SpeechClient()
 

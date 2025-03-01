@@ -9,11 +9,6 @@ import os
 from app.routers.ai import get_current_user
 from ..models.model_types import OrderCancellation, OrderFeedback, Order, OrderStatusUpdate
 
-# Initialize Firebase
-dotenv.load_dotenv()
-CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE")
-cred = credentials.Certificate(CREDENTIALS_FILE)
-
 router = APIRouter()
 
 # GET /api/orders - Fetch all orders (Authenticated)

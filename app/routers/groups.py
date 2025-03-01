@@ -5,7 +5,7 @@ from firebase_admin import db
 import speech_recognition as sr
 import io
 from typing import Optional, List
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 
 
 router = APIRouter()
@@ -23,7 +23,7 @@ async def get_groups():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/groups")
-async def create_group(request: GroupRequest, user=Depends(get_current_user)):
+async def create_group(request: GroupRequest, user=Depends(UserAuth.get_current_user)):
     """
     Create a new cooperative group.
     """
@@ -38,7 +38,7 @@ async def create_group(request: GroupRequest, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/groups/{groupId}")
-async def get_group(groupId: str, user=Depends(get_current_user)):
+async def get_group(groupId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve details of a specific group.
     """
@@ -51,7 +51,7 @@ async def get_group(groupId: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/api/groups/{groupId}")
-async def update_group(groupId: str, request: UpdateGroupRequest, user=Depends(get_current_user)):
+async def update_group(groupId: str, request: UpdateGroupRequest, user=Depends(UserAuth.get_current_user)):
     """
     Update details of a cooperative group.
     """
@@ -80,7 +80,7 @@ async def get_groups():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/groups")
-async def create_group(request: GroupRequest, user=Depends(get_current_user)):
+async def create_group(request: GroupRequest, user=Depends(UserAuth.get_current_user)):
     """
     Create a new cooperative group.
     """
@@ -95,7 +95,7 @@ async def create_group(request: GroupRequest, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/groups/{groupId}")
-async def get_group(groupId: str, user=Depends(get_current_user)):
+async def get_group(groupId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve details of a specific group.
     """
@@ -108,7 +108,7 @@ async def get_group(groupId: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/api/groups/{groupId}")
-async def update_group(groupId: str, request: UpdateGroupRequest, user=Depends(get_current_user)):
+async def update_group(groupId: str, request: UpdateGroupRequest, user=Depends(UserAuth.get_current_user)):
     """
     Update details of a cooperative group.
     """
@@ -124,7 +124,7 @@ async def update_group(groupId: str, request: UpdateGroupRequest, user=Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/api/groups/{groupId}")
-async def delete_group(groupId: str, user=Depends(get_current_user)):
+async def delete_group(groupId: str, user=Depends(UserAuth.get_current_user)):
     """
     Delete a cooperative group.
     """
@@ -139,7 +139,7 @@ async def delete_group(groupId: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/groups/{groupId}/members")
-async def get_group_members(groupId: str, user=Depends(get_current_user)):
+async def get_group_members(groupId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve members of a specific group.
     """
@@ -153,7 +153,7 @@ async def get_group_members(groupId: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/groups/{groupId}/members")
-async def add_group_member(groupId: str, member_id: str, user=Depends(get_current_user)):
+async def add_group_member(groupId: str, member_id: str, user=Depends(UserAuth.get_current_user)):
     """
     Add a member to a cooperative group.
     """
@@ -173,7 +173,7 @@ async def add_group_member(groupId: str, member_id: str, user=Depends(get_curren
 
 
 @router.delete("/api/groups/{groupId}/members/{memberId}")
-async def remove_group_member(groupId: str, memberId: str, user=Depends(get_current_user)):
+async def remove_group_member(groupId: str, memberId: str, user=Depends(UserAuth.get_current_user)):
     """
     Remove a member from a cooperative group.
     """
@@ -192,7 +192,7 @@ async def remove_group_member(groupId: str, memberId: str, user=Depends(get_curr
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/groups/{groupId}/invite")
-async def invite_member(groupId: str, request: GroupInviteRequest, user=Depends(get_current_user)):
+async def invite_member(groupId: str, request: GroupInviteRequest, user=Depends(UserAuth.get_current_user)):
     """
     Invite a new member to a cooperative group via email.
     """
@@ -207,7 +207,7 @@ async def invite_member(groupId: str, request: GroupInviteRequest, user=Depends(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/groups/{groupId}/chat")
-async def get_group_chat(groupId: str, user=Depends(get_current_user)):
+async def get_group_chat(groupId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve group chat messages for a specific group.
     """

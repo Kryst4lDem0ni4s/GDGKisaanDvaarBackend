@@ -5,7 +5,7 @@ from firebase_admin import credentials, firestore
 from google.cloud import firestore as gcp_firestore
 import redis
 from fastapi_limiter import FastAPILimiter
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 from firebase_admin import db
 
 app_routers = FastAPILimiter()

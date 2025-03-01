@@ -14,6 +14,7 @@ from google.cloud import speech_v1p1beta1 as speech
 from typing import List
 import uuid
 from google.cloud import firestore
+from app.controllers.auth import UserAuth
 
 router = APIRouter()
 
@@ -29,12 +30,6 @@ db = firestore.Client()
 ai_ref = db.collection("ai")
 
 # Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
     
 def upload_to_storage(file, filename):
     bucket = storage_client.bucket(bucket_name)
@@ -50,7 +45,7 @@ def analyze_image(image_content):
     return [label.description for label in response.label_annotations]
 
 @router.post("/api/ai/crop-monitoring")
-async def upload_crop_images(files: List[UploadFile] = File(...), user=Depends(get_current_user)):
+async def upload_crop_images(files: List[UploadFile] = File(...), user=Depends(UserAuth.get_current_user)):
     """
     Upload image(s) for crop health analysis.
     """
@@ -74,7 +69,7 @@ async def upload_crop_images(files: List[UploadFile] = File(...), user=Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/crop-monitoring/results/{analysisId}")
-async def get_crop_analysis_results(analysisId: str, user=Depends(get_current_user)):
+async def get_crop_analysis_results(analysisId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve crop health analysis results.
     """
@@ -90,7 +85,7 @@ async def get_crop_analysis_results(analysisId: str, user=Depends(get_current_us
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/ai/pest-detection")
-async def upload_pest_detection_images(files: List[UploadFile] = File(...), user=Depends(get_current_user)):
+async def upload_pest_detection_images(files: List[UploadFile] = File(...), user=Depends(UserAuth.get_current_user)):
     """
     Upload image(s) for pest detection.
     """
@@ -114,7 +109,7 @@ async def upload_pest_detection_images(files: List[UploadFile] = File(...), user
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/ai/crop-monitoring")
-async def upload_crop_images(files: List[UploadFile] = File(...), user=Depends(get_current_user)):
+async def upload_crop_images(files: List[UploadFile] = File(...), user=Depends(UserAuth.get_current_user)):
     """
     Upload image(s) for crop health analysis.
     """
@@ -138,7 +133,7 @@ async def upload_crop_images(files: List[UploadFile] = File(...), user=Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/crop-monitoring/results/{analysisId}")
-async def get_crop_analysis_results(analysisId: str, user=Depends(get_current_user)):
+async def get_crop_analysis_results(analysisId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve crop health analysis results.
     """
@@ -154,7 +149,7 @@ async def get_crop_analysis_results(analysisId: str, user=Depends(get_current_us
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/ai/pest-detection")
-async def upload_pest_detection_images(files: List[UploadFile] = File(...), user=Depends(get_current_user)):
+async def upload_pest_detection_images(files: List[UploadFile] = File(...), user=Depends(UserAuth.get_current_user)):
     """
     Upload image(s) for pest detection.
     """
@@ -178,7 +173,7 @@ async def upload_pest_detection_images(files: List[UploadFile] = File(...), user
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/pest-detection/results/{analysisId}")
-async def get_pest_detection_results(analysisId: str, user=Depends(get_current_user)):
+async def get_pest_detection_results(analysisId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve pest detection analysis results.
     """
@@ -194,7 +189,7 @@ async def get_pest_detection_results(analysisId: str, user=Depends(get_current_u
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/ai/model-feedback")
-async def submit_model_feedback(request: ModelFeedbackRequest, user=Depends(get_current_user)):
+async def submit_model_feedback(request: ModelFeedbackRequest, user=Depends(UserAuth.get_current_user)):
     """
     Submit user feedback on AI predictions.
     """
@@ -220,7 +215,7 @@ async def get_model_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/ai/audio")
-async def process_audio(files: List[UploadFile] = File(...), user=Depends(get_current_user)):
+async def process_audio(files: List[UploadFile] = File(...), user=Depends(UserAuth.get_current_user)):
     """
     Process audio input (speech-to-text conversion).
     """
@@ -253,7 +248,7 @@ async def process_audio(files: List[UploadFile] = File(...), user=Depends(get_cu
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/audio/status/{audioId}")
-async def get_audio_status(audioId: str, user=Depends(get_current_user)):
+async def get_audio_status(audioId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve the status of audio processing.
     """
@@ -278,7 +273,7 @@ async def get_audio_status(audioId: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/ai/audio/feedback")
-async def submit_audio_feedback(request: AudioFeedbackRequest, user=Depends(get_current_user)):
+async def submit_audio_feedback(request: AudioFeedbackRequest, user=Depends(UserAuth.get_current_user)):
     """
     Collect feedback on audio processing.
     """
@@ -293,7 +288,7 @@ async def submit_audio_feedback(request: AudioFeedbackRequest, user=Depends(get_
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/market-prices")
-async def get_market_prices(location: str, commodity: str, user=Depends(get_current_user)):
+async def get_market_prices(location: str, commodity: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve current market prices for a specific commodity at a given location.
     """
@@ -306,7 +301,7 @@ async def get_market_prices(location: str, commodity: str, user=Depends(get_curr
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/demand-forecast")
-async def get_demand_forecast(request: MarketForecastRequest, user=Depends(get_current_user)):
+async def get_demand_forecast(request: MarketForecastRequest, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve demand forecast for a commodity based on location and timeframe.
     """
@@ -319,7 +314,7 @@ async def get_demand_forecast(request: MarketForecastRequest, user=Depends(get_c
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/market-trends")
-async def get_market_trends(request: TrendAnalysisRequest, user=Depends(get_current_user)):
+async def get_market_trends(request: TrendAnalysisRequest, user=Depends(UserAuth.get_current_user)):
     """
     Analyze and retrieve market trends for a category over a given date range.
     """
@@ -331,7 +326,7 @@ async def get_market_trends(request: TrendAnalysisRequest, user=Depends(get_curr
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/market-prices/history")
-async def get_historical_prices(location: str, commodity: str, start_date: str, end_date: str, user=Depends(get_current_user)):
+async def get_historical_prices(location: str, commodity: str, start_date: str, end_date: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve historical market prices for a commodity within a date range.
     """
@@ -343,7 +338,7 @@ async def get_historical_prices(location: str, commodity: str, start_date: str, 
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/demand-forecast/accuracy")
-async def get_forecast_accuracy(location: str, commodity: str, user=Depends(get_current_user)):
+async def get_forecast_accuracy(location: str, commodity: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve accuracy metrics for demand forecasting models.
     """
@@ -356,7 +351,7 @@ async def get_forecast_accuracy(location: str, commodity: str, user=Depends(get_
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/market-trends/predictions")
-async def get_trend_predictions(category: str, user=Depends(get_current_user)):
+async def get_trend_predictions(category: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve predictive trend analysis for a specific category.
     """
@@ -369,7 +364,7 @@ async def get_trend_predictions(category: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/resource-optimization")
-async def get_resource_optimization(request: ResourceOptimizationRequest, user=Depends(get_current_user)):
+async def get_resource_optimization(request: ResourceOptimizationRequest, user=Depends(UserAuth.get_current_user)):
     """
     Optimize resource allocation based on constraints and goals.
     """
@@ -387,7 +382,7 @@ async def get_resource_optimization(request: ResourceOptimizationRequest, user=D
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/transport-route")
-async def get_transport_route(request: TransportRouteRequest, user=Depends(get_current_user)):
+async def get_transport_route(request: TransportRouteRequest, user=Depends(UserAuth.get_current_user)):
     """
     Get optimized transport routes for resource delivery or logistics.
     """
@@ -406,7 +401,7 @@ async def get_transport_route(request: TransportRouteRequest, user=Depends(get_c
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/resource-optimization/status/{optimizationId}")
-async def get_resource_optimization_status(optimizationId: str, user=Depends(get_current_user)):
+async def get_resource_optimization_status(optimizationId: str, user=Depends(UserAuth.get_current_user)):
     """
     Get the status and results of resource optimization.
     """
@@ -421,7 +416,7 @@ async def get_resource_optimization_status(optimizationId: str, user=Depends(get
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/transport-route/status/{routeId}")
-async def get_transport_route_status(routeId: str, user=Depends(get_current_user)):
+async def get_transport_route_status(routeId: str, user=Depends(UserAuth.get_current_user)):
     """
     Get the status and details of a transport route optimization.
     """
@@ -542,7 +537,7 @@ def get_pest_detection_results(task_id):
 
 
 @router.post("/api/ai/remote-sensing")
-async def trigger_remote_sensing_analysis(files: list[UploadFile] = File(...), user=Depends(get_current_user)):
+async def trigger_remote_sensing_analysis(files: list[UploadFile] = File(...), user=Depends(UserAuth.get_current_user)):
     """
     Trigger remote sensing analysis by uploading geospatial data or images for processing.
     """
@@ -573,7 +568,7 @@ async def trigger_remote_sensing_analysis(files: list[UploadFile] = File(...), u
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.get("/api/ai/remote-sensing/results/{taskId}")
-async def get_remote_sensing_results(taskId: str, user=Depends(get_current_user)):
+async def get_remote_sensing_results(taskId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve the result of remote sensing analysis.
     """
@@ -622,7 +617,7 @@ async def get_weather_data(location: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/ai/history")
-async def get_ai_history(user=Depends(get_current_user)):
+async def get_ai_history(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve history of AI analysis requests for the current user.
     """
@@ -643,7 +638,7 @@ async def get_ai_history(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/ai/queue")
-async def add_to_ai_queue(file_url: str, analysis_type: str, user=Depends(get_current_user)):
+async def add_to_ai_queue(file_url: str, analysis_type: str, user=Depends(UserAuth.get_current_user)):
     """
     Add a request to an AI processing queue.
     """
@@ -666,7 +661,7 @@ async def add_to_ai_queue(file_url: str, analysis_type: str, user=Depends(get_cu
 
 
 @router.post("/api/ai/schedule")
-async def schedule_ai_task(task_type: str, schedule_time: str, user=Depends(get_current_user)):
+async def schedule_ai_task(task_type: str, schedule_time: str, user=Depends(UserAuth.get_current_user)):
     """
     Schedule periodic AI tasks.
     """
@@ -697,7 +692,7 @@ async def schedule_ai_task(task_type: str, schedule_time: str, user=Depends(get_
 
 
 @router.post("/api/ai/process")
-async def process_ai_job(file: UploadFile = File(...), user=Depends(get_current_user)):
+async def process_ai_job(file: UploadFile = File(...), user=Depends(UserAuth.get_current_user)):
     """
     Process a new AI job immediately (e.g., image analysis via Google Cloud Vision).
     """
@@ -728,7 +723,7 @@ async def process_ai_job(file: UploadFile = File(...), user=Depends(get_current_
 
    
 @router.get("/api/ai/results/{taskId}")
-async def get_ai_results(taskId: str, user=Depends(get_current_user)):
+async def get_ai_results(taskId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve the results of an AI task once completed.
     """
@@ -774,7 +769,7 @@ async def get_ai_model_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/ai/feedback")
-async def submit_ai_feedback(feedback_data: AIFeedback, user=Depends(get_current_user)):
+async def submit_ai_feedback(feedback_data: AIFeedback, user=Depends(UserAuth.get_current_user)):
     """
     Submit feedback for AI predictions to improve model accuracy.
     """

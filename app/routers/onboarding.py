@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from google.cloud import firestore
 from typing import List
 from app.models.model_types import OnboardingTask, OnboardingTaskUpdate
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 
 router = APIRouter()
 
@@ -10,7 +10,7 @@ router = APIRouter()
 db = firestore.Client()
 
 @router.get("/api/onboarding/tutorial")
-async def get_onboarding_tutorial(user=Depends(get_current_user)):
+async def get_onboarding_tutorial(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve a tutorial for new users to help them understand how to use the app.
     """
@@ -33,7 +33,7 @@ async def get_onboarding_tutorial(user=Depends(get_current_user)):
 #     - video_url: "https://example.com/tutorial_video"
 
 @router.get("/api/onboarding/tips")
-async def get_onboarding_tips(user=Depends(get_current_user)):
+async def get_onboarding_tips(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve tips for users to help them navigate and get the most out of the app.
     """
@@ -59,7 +59,7 @@ async def get_onboarding_tips(user=Depends(get_current_user)):
 
 
 @router.get("/api/onboarding/checklist")
-async def get_onboarding_checklist(user=Depends(get_current_user)):
+async def get_onboarding_checklist(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve a checklist of onboarding tasks for new users.
     """
@@ -100,7 +100,7 @@ async def get_onboarding_checklist(user=Depends(get_current_user)):
 
 
 @router.put("/api/onboarding/update-progress")
-async def update_task_progress(task_update: OnboardingTaskUpdate, user=Depends(get_current_user)):
+async def update_task_progress(task_update: OnboardingTaskUpdate, user=Depends(UserAuth.get_current_user)):
     """
     Update progress of onboarding tasks (mark task as completed).
     """

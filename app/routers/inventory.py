@@ -7,7 +7,7 @@ from typing import *
 import os
 from google.cloud import firestore
 from fastapi import APIRouter, HTTPException
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 
 db = firestore.Client()
 

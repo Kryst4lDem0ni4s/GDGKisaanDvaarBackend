@@ -3,12 +3,10 @@ from app.models.model_types import BotQueryRequest, ForumCommentRequest, ForumTh
 from firebase_admin import db
 import speech_recognition as sr
 import io
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
 from pydantic import BaseModel
 from firebase_admin import firestore, auth
-import speech_recognition as sr
-import io
 from typing import Optional
 from google.cloud import firestore
 
@@ -18,7 +16,7 @@ db = firestore.Client()
 router = APIRouter()
 
 @router.post("/api/chat/bot")
-async def chatbot_query(request: BotQueryRequest, user=Depends(get_current_user)):
+async def chatbot_query(request: BotQueryRequest, user=Depends(UserAuth.get_current_user)):
     """
     Handle chatbot queries and return responses.
     """
@@ -29,7 +27,7 @@ async def chatbot_query(request: BotQueryRequest, user=Depends(get_current_user)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/chat/audio/upload")
-async def upload_audio(file: UploadFile = File(...), user=Depends(get_current_user)):
+async def upload_audio(file: UploadFile = File(...), user=Depends(UserAuth.get_current_user)):
     """
     Process and transcribe uploaded audio files.
     """
@@ -44,7 +42,7 @@ async def upload_audio(file: UploadFile = File(...), user=Depends(get_current_us
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/chat/conversations/{conversationId}/metadata")
-async def get_conversation_metadata(conversationId: str, user=Depends(get_current_user)):
+async def get_conversation_metadata(conversationId: str, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve metadata of a specific conversation.
     """
@@ -82,7 +80,7 @@ async def get_forum_threads():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/forum/threads")
-async def create_forum_thread(request: ForumThreadRequest, user=Depends(get_current_user)):
+async def create_forum_thread(request: ForumThreadRequest, user=Depends(UserAuth.get_current_user)):
     """
     Create a new forum thread.
     """
@@ -109,7 +107,7 @@ async def get_forum_thread(threadId: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/api/forum/threads/{threadId}")
-async def update_forum_thread(threadId: str, request: UpdateThreadRequest, user=Depends(get_current_user)):
+async def update_forum_thread(threadId: str, request: UpdateThreadRequest, user=Depends(UserAuth.get_current_user)):
     """
     Update an existing forum thread.
     """
@@ -125,7 +123,7 @@ async def update_forum_thread(threadId: str, request: UpdateThreadRequest, user=
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/api/forum/threads/{threadId}")
-async def delete_forum_thread(threadId: str, user=Depends(get_current_user)):
+async def delete_forum_thread(threadId: str, user=Depends(UserAuth.get_current_user)):
     """
     Delete a specific forum thread.
     """
@@ -152,7 +150,7 @@ async def get_forum_comments(threadId: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/forum/threads/{threadId}/comments")
-async def create_forum_comment(threadId: str, request: ForumCommentRequest, user=Depends(get_current_user)):
+async def create_forum_comment(threadId: str, request: ForumCommentRequest, user=Depends(UserAuth.get_current_user)):
     """
     Add a new comment to a forum thread.
     """
@@ -164,16 +162,6 @@ async def create_forum_comment(threadId: str, request: ForumCommentRequest, user
         return {"message": "Comment added successfully", "comment_id": comment_ref.id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-router = APIRouter()
-
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
 
 @router.get("/api/forum/search")
 async def search_forum_threads(
@@ -204,7 +192,7 @@ async def search_forum_threads(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/forum/threads/{threadId}/vote")
-async def vote_thread(threadId: str, request: VoteRequest, user=Depends(get_current_user)):
+async def vote_thread(threadId: str, request: VoteRequest, user=Depends(UserAuth.get_current_user)):
     """
     Upvote or downvote a thread.
     """
@@ -229,7 +217,7 @@ async def vote_thread(threadId: str, request: VoteRequest, user=Depends(get_curr
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/forum/threads/{threadId}/report")
-async def report_thread(threadId: str, request: ReportRequest, user=Depends(get_current_user)):
+async def report_thread(threadId: str, request: ReportRequest, user=Depends(UserAuth.get_current_user)):
     """
     Report a thread for inappropriate content.
     """
@@ -244,7 +232,7 @@ async def report_thread(threadId: str, request: ReportRequest, user=Depends(get_
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/api/forum/threads/{threadId}/moderate")
-async def moderate_thread(threadId: str, request: ModerateThreadRequest, user=Depends(get_current_user)):
+async def moderate_thread(threadId: str, request: ModerateThreadRequest, user=Depends(UserAuth.get_current_user)):
     """
     Perform moderator actions on a thread (lock, unlock, delete, warn).
     """

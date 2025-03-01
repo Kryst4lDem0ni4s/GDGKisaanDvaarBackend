@@ -6,21 +6,21 @@ from uuid import uuid4
 import datetime
 import dotenv
 import os
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 from ..models.model_types import OrderCancellation, OrderFeedback, Order, OrderStatusUpdate
 
 router = APIRouter()
 
 # GET /api/orders - Fetch all orders (Authenticated)
 @router.get("/api/orders", response_model=List[dict])
-async def get_orders(user=Depends(get_current_user)):
+async def get_orders(user=Depends(UserAuth.get_current_user)):
     orders_ref = db.collection("orders").stream()
     orders = [doc.to_dict() for doc in orders_ref]
     return orders
 
 # POST /api/orders - Create a new order
 @router.post("/api/orders", response_model=dict)
-async def create_order(order: Order, user=Depends(get_current_user)):
+async def create_order(order: Order, user=Depends(UserAuth.get_current_user)):
     if user["uid"] != order.farmerId:
         raise HTTPException(status_code=403, detail="Unauthorized to create order")
 
@@ -34,7 +34,7 @@ async def create_order(order: Order, user=Depends(get_current_user)):
 #commit
 # GET /api/orders/{orderId} - Fetch a specific order
 @router.get("/api/orders/{orderId}", response_model=dict)
-async def get_order(orderId: str, user=Depends(get_current_user)):
+async def get_order(orderId: str, user=Depends(UserAuth.get_current_user)):
     order_ref = db.collection("orders").document(orderId).get()
     if not order_ref.exists:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -47,7 +47,7 @@ async def get_order(orderId: str, user=Depends(get_current_user)):
 
 # PUT /api/orders/{orderId}/status - Update order status
 @router.put("/api/orders/{orderId}/status", response_model=dict)
-async def update_order_status(orderId: str, status_update: OrderStatusUpdate, user=Depends(get_current_user)):
+async def update_order_status(orderId: str, status_update: OrderStatusUpdate, user=Depends(UserAuth.get_current_user)):
     order_ref = db.collection("orders").document(orderId)
     order_doc = order_ref.get()
 
@@ -63,7 +63,7 @@ async def update_order_status(orderId: str, status_update: OrderStatusUpdate, us
 
 # DELETE /api/orders/{orderId} - Delete an order
 @router.delete("/api/orders/{orderId}", response_model=dict)
-async def delete_order(orderId: str, user=Depends(get_current_user)):
+async def delete_order(orderId: str, user=Depends(UserAuth.get_current_user)):
     order_ref = db.collection("orders").document(orderId)
     order_doc = order_ref.get()
 
@@ -79,7 +79,7 @@ async def delete_order(orderId: str, user=Depends(get_current_user)):
 
 # GET /api/orders/{orderId}/tracking - Retrieve tracking details
 @router.get("/api/orders/{orderId}/tracking", response_model=dict)
-async def track_order(orderId: str, user=Depends(get_current_user)):
+async def track_order(orderId: str, user=Depends(UserAuth.get_current_user)):
     order_ref = db.collection("orders").document(orderId).get()
     if not order_ref.exists:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -92,14 +92,14 @@ async def track_order(orderId: str, user=Depends(get_current_user)):
 
 # GET /api/orders/{orderId}/chat - Retrieve order chat (Mocked)
 @router.get("/api/orders/{orderId}/chat", response_model=List[dict])
-async def get_order_chat(orderId: str, user=Depends(get_current_user)):
+async def get_order_chat(orderId: str, user=Depends(UserAuth.get_current_user)):
     chat_ref = db.collection("orders").document(orderId).collection("chat").stream()
     chat_messages = [doc.to_dict() for doc in chat_ref]
     return chat_messages
 
 # POST /api/orders/{orderId}/cancel - Cancel an order with reason
 @router.post("/api/orders/{orderId}/cancel", response_model=dict)
-async def cancel_order(orderId: str, cancellation: OrderCancellation, user=Depends(get_current_user)):
+async def cancel_order(orderId: str, cancellation: OrderCancellation, user=Depends(UserAuth.get_current_user)):
     order_ref = db.collection("orders").document(orderId)
     order_doc = order_ref.get()
     if not order_doc.exists:
@@ -114,7 +114,7 @@ async def cancel_order(orderId: str, cancellation: OrderCancellation, user=Depen
 
 # POST /api/orders/{orderId}/feedback - Submit feedback
 @router.post("/api/orders/{orderId}/feedback", response_model=dict)
-async def submit_feedback(orderId: str, feedback: OrderFeedback, user=Depends(get_current_user)):
+async def submit_feedback(orderId: str, feedback: OrderFeedback, user=Depends(UserAuth.get_current_user)):
     order_ref = db.collection("orders").document(orderId)
     order_doc = order_ref.get()
     if not order_doc.exists:

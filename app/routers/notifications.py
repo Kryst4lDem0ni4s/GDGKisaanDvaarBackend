@@ -2,23 +2,15 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
 from firebase_admin import firestore, auth, storage, messaging, db
 from google.cloud import vision, speech_v1p1beta1 as speech
 from app.models.model_types import NotificationRequest, NotificationSubscriptionRequest
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 
 router = APIRouter()
 
 # Google Cloud Services
 speech_client = speech.SpeechClient()
 
-# Middleware for Firebase authentication
-def get_current_user(user_id: str):
-    try:
-        user = auth.get_user(user_id)
-        return user
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or unauthorized user")
-
 @router.get("/api/notifications")
-async def get_notifications(user=Depends(get_current_user)):
+async def get_notifications(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve all notifications for a user.
     """
@@ -30,7 +22,7 @@ async def get_notifications(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/api/notifications/{notificationId}/mark-read")
-async def mark_notification_as_read(notificationId: str, user=Depends(get_current_user)):
+async def mark_notification_as_read(notificationId: str, user=Depends(UserAuth.get_current_user)):
     """
     Mark a notification as read.
     """
@@ -45,7 +37,7 @@ async def mark_notification_as_read(notificationId: str, user=Depends(get_curren
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/api/notifications/{notificationId}")
-async def delete_notification(notificationId: str, user=Depends(get_current_user)):
+async def delete_notification(notificationId: str, user=Depends(UserAuth.get_current_user)):
     """
     Delete a notification.
     """
@@ -60,7 +52,7 @@ async def delete_notification(notificationId: str, user=Depends(get_current_user
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/notifications/send")
-async def send_notification(request: NotificationRequest, user=Depends(get_current_user)):
+async def send_notification(request: NotificationRequest, user=Depends(UserAuth.get_current_user)):
     """
     Send a notification to a user.
     """
@@ -89,7 +81,7 @@ async def send_notification(request: NotificationRequest, user=Depends(get_curre
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/notifications/unread-count")
-async def get_unread_notification_count(user=Depends(get_current_user)):
+async def get_unread_notification_count(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve the count of unread notifications.
     """
@@ -101,7 +93,7 @@ async def get_unread_notification_count(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/notifications")
-async def get_notifications(user=Depends(get_current_user)):
+async def get_notifications(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve all notifications for a user.
     """
@@ -113,7 +105,7 @@ async def get_notifications(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/notifications/subscribe")
-async def subscribe_to_notifications(request: NotificationSubscriptionRequest, user=Depends(get_current_user)):
+async def subscribe_to_notifications(request: NotificationSubscriptionRequest, user=Depends(UserAuth.get_current_user)):
     """
     Subscribe to notification topics.
     """
@@ -126,7 +118,7 @@ async def subscribe_to_notifications(request: NotificationSubscriptionRequest, u
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/notifications/unsubscribe")
-async def unsubscribe_from_notifications(request: NotificationSubscriptionRequest, user=Depends(get_current_user)):
+async def unsubscribe_from_notifications(request: NotificationSubscriptionRequest, user=Depends(UserAuth.get_current_user)):
     """
     Unsubscribe from notification topics.
     """

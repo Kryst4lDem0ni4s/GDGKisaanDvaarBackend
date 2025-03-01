@@ -4,7 +4,7 @@ import requests
 import os
 from firebase_admin import messaging
 from app.models.model_types import Location, LocationAlertSubscription, MovementTracking
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 
 router = APIRouter()
 
@@ -61,7 +61,7 @@ async def search_geospatial(location: Location, place_type: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/geospatial/alerts")
-async def get_geospatial_alerts(location: Location, user=Depends(get_current_user)):
+async def get_geospatial_alerts(location: Location, user=Depends(UserAuth.get_current_user)):
     """
     Retrieve location-based notifications or alerts for the user.
     """
@@ -83,7 +83,7 @@ async def get_geospatial_alerts(location: Location, user=Depends(get_current_use
 
 
 @router.post("/api/geospatial/alerts/subscribe")
-async def subscribe_to_alerts(subscription: LocationAlertSubscription, user=Depends(get_current_user)):
+async def subscribe_to_alerts(subscription: LocationAlertSubscription, user=Depends(UserAuth.get_current_user)):
     """
     Subscribe users to location-based alerts (e.g., weather, market changes).
     """
@@ -102,7 +102,7 @@ async def subscribe_to_alerts(subscription: LocationAlertSubscription, user=Depe
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/geospatial/alerts/preferences")
-async def get_user_alert_preferences(user=Depends(get_current_user)):
+async def get_user_alert_preferences(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve user preferences for location-based alerts.
     """
@@ -119,7 +119,7 @@ async def get_user_alert_preferences(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/geospatial/movement")
-async def track_goods_movement(movement: MovementTracking, user=Depends(get_current_user)):
+async def track_goods_movement(movement: MovementTracking, user=Depends(UserAuth.get_current_user)):
     """
     Track the movement of goods through the supply chain.
     """
@@ -139,7 +139,7 @@ async def track_goods_movement(movement: MovementTracking, user=Depends(get_curr
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/geospatial/movement/analytics")
-async def get_movement_analytics(user=Depends(get_current_user)):
+async def get_movement_analytics(user=Depends(UserAuth.get_current_user)):
     """
     Retrieve geospatial analytics on the movement of goods, such as average delivery times and route optimization.
     """

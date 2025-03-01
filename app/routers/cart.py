@@ -9,7 +9,7 @@ from typing import Optional, List
 import uuid
 import os
 import dotenv
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 
 """
 User Cart (in Database):
@@ -50,7 +50,7 @@ router = APIRouter()
 speech_client = speech.SpeechClient()
 
 @router.post("/cart/add")
-async def add_to_cart(request: CartItemRequest, user=Depends(get_current_user)):
+async def add_to_cart(request: CartItemRequest, user=Depends(UserAuth.get_current_user)):
     """
     Adds an item to the user's cart.
     """
@@ -74,7 +74,7 @@ async def add_to_cart(request: CartItemRequest, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/cart")
-async def view_cart(user=Depends(get_current_user)):
+async def view_cart(user=Depends(UserAuth.get_current_user)):
     """
     Retrieves the user's cart items and calculates the total bill.
     """
@@ -93,7 +93,7 @@ async def view_cart(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/cart/{item_id}")
-async def update_cart_quantity(item_id: str, quantity: int, user=Depends(get_current_user)):
+async def update_cart_quantity(item_id: str, quantity: int, user=Depends(UserAuth.get_current_user)):
     """
     Updates the quantity of an item in the cart.
     """
@@ -110,7 +110,7 @@ async def update_cart_quantity(item_id: str, quantity: int, user=Depends(get_cur
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/cart/{item_id}")
-async def remove_from_cart(item_id: str, user=Depends(get_current_user)):
+async def remove_from_cart(item_id: str, user=Depends(UserAuth.get_current_user)):
     """
     Remove the specified item from the cart.
     """
@@ -124,7 +124,7 @@ async def remove_from_cart(item_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/cart/empty")
-async def empty_cart(user=Depends(get_current_user)):
+async def empty_cart(user=Depends(UserAuth.get_current_user)):
     """
     Clear all items from the user's cart.
     """

@@ -157,3 +157,16 @@ def get_admin_user(token: str = Depends(auth.verify_id_token)):
     if token.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Access forbidden: Admins only.")
     return token
+
+# def upload_to_storage(file, filename):
+#     bucket = storage_client.bucket(bucket_name)
+#     blob = bucket.blob(filename)
+#     blob.upload_from_file(file)
+#     return blob.public_url
+
+# def analyze_image(image_content):
+#     image = vision.Image(content=image_content)
+#     response = vision_client.label_detection(image=image)
+#     if response.error.message:
+#         raise Exception(response.error.message)
+#     return [label.description for label in response.label_annotations]

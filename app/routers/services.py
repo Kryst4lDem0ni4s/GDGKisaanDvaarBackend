@@ -2,7 +2,7 @@ import os
 from firebase_admin import credentials, initialize_app, auth
 from typing import *
 from fastapi import APIRouter, HTTPException
-from app.routers.ai import get_current_user
+from app.controllers.auth import UserAuth
 from firebase_admin import db
 
 router = APIRouter()
@@ -12,7 +12,7 @@ async def create_cold_storage_service(name, address, phone_number, email=None, w
     """Creates a new cold storage service document in the Firebase database."""
     
     # Validate user's occupation (ensure they are a customer) TO-DO
-    user = await get_current_user()
+    user = await UserAuth.get_current_user()
     if user.occupation != "customer":
         raise HTTPException(status_code=403, detail="Only customers can create service listings.")
     
@@ -53,7 +53,7 @@ async def get_cold_storage_service(service_id):
 async def update_cold_storage_service(service_id, name, address, phone_number, email=None, website=None, description="", minimum_quantity=0, areas_served=[], payment_methods=[], rating=0, favorites=[], status="active"):
     """User authentication per session is possible from flutter side, TODO"""
     # Validate user's occupation (ensure they are the customer that uploaded.)
-    user = await get_current_user()
+    user = await UserAuth.get_current_user()
     if user.occupation not in ["customer"]:
         raise HTTPException(status_code=403, detail="Only owners or admins can update service listings.")
     # https://firebase.google.com/docs/auth/android/manage-users
@@ -87,7 +87,7 @@ async def delete_cold_storage_service(service_id):
 async def mark_as_favorite(service_id):
     
     # Validate user's occupation (ensure they are a farmer)
-    user = await get_current_user()
+    user = await UserAuth.get_current_user()
     if user.occupation != "farmer":
         raise HTTPException(status_code=403, detail="Only farmers can mark services as favorites.")
 
@@ -102,7 +102,7 @@ async def mark_as_favorite(service_id):
 @router.patch("/cold_storage_services/{service_id}/unfavorite")
 async def unmark_as_favorite(service_id):
     # Validate user's occupation (ensure they are a farmer)
-    user = await get_current_user()
+    user = await UserAuth.get_current_user()
     if user.occupation != "farmer":
         raise HTTPException(status_code=403, detail="Only farmers can unmark services as favorites.")
 

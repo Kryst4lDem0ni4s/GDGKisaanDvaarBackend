@@ -47,34 +47,6 @@ async def add_retail_partner(partner: RetailPartner):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to add retail partner: {str(e)}")
 
-
-@router.put("/api/partners/update")
-async def update_partner_details(details: UpdatePartnerDetails):
-    """
-    Update partner details based on the provided partner_id.
-    """
-    try:
-        partner_ref = db.collection("partners").document(details.partner_id)
-        partner_doc = partner_ref.get()
-
-        if not partner_doc.exists:
-            raise HTTPException(status_code=404, detail="Partner not found.")
-        
-        # Prepare update data
-        update_data = {}
-        if details.name: update_data["name"] = details.name
-        if details.location: update_data["location"] = details.location
-        if details.contact_info: update_data["contact_info"] = details.contact_info
-        if details.business_type: update_data["business_type"] = details.business_type
-        if details.rating: update_data["rating"] = details.rating
-
-        # Update partner details in Firestore
-        partner_ref.update(update_data)
-
-        return {"message": "Partner details updated successfully."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update partner details: {str(e)}")
-
 @router.get("/api/partners/{partnerId}/reviews")
 async def get_partner_reviews(partnerId: str):
     """
@@ -179,24 +151,6 @@ async def update_partner_details(details: UpdatePartnerDetails, user=Depends(Use
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update partner details: {str(e)}")
 
-@router.get("/api/partners/{partnerId}/reviews")
-async def get_partner_reviews(partnerId: str):
-    """
-    Retrieve reviews for a specific partner using partnerId.
-    """
-    try:
-        # Fetch reviews from Firestore for the given partnerId
-        reviews_ref = db.collection("partners").document(partnerId).collection("reviews")
-        reviews = reviews_ref.stream()
-
-        # Collect reviews data
-        review_list = []
-        for review in reviews:
-            review_list.append(review.to_dict())
-
-        return {"reviews": review_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve partner reviews: {str(e)}")
 
 @router.get("/api/partners/search")
 async def search_partners(location: str = None, partner_type: str = None, min_rating: float = 0):
